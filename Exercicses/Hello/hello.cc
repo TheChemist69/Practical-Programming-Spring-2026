@@ -2,5 +2,5 @@
 #include<iostream>
 
 void hello(void){
-    std::cout << "hello from me" << "\n";    
+    std::cout << "Hello World!" << "\n";    
 }

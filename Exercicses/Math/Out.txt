@@ -1,0 +1,31 @@
+task 1: Simple Math Operations
+The square root of 2 is: 1.41421
+3 raised to the power of 1/5 is: 1.24573
+e raised to the power of pi is: 23.1407
+pi raised to the power of e is: 22.4592
+------------------------
+task 2: Computing the Gamma Function
+Gamma(1) = 1
+Gamma(2) = 1
+Gamma(3) = 2
+Gamma(4) = 6
+Gamma(5) = 24
+Gamma(6) = 120
+Gamma(7) = 720
+Gamma(8) = 5040
+Gamma(9) = 40320
+Gamma(10) = 362880
+Gamma(500) = inf
+------------------------
+task 3: Computing the Natural Logarithm of the Gamma Function
+ln(Gamma(1)) = -1.09351e-08
+ln(Gamma(2)) = -1.09351e-08
+ln(Gamma(3)) = 0.693147
+ln(Gamma(4)) = 1.79176
+ln(Gamma(5)) = 3.17805
+ln(Gamma(6)) = 4.78749
+ln(Gamma(7)) = 6.57925
+ln(Gamma(8)) = 8.52516
+ln(Gamma(9)) = 10.6046
+ln(Gamma(10)) = 12.8018
+ln(Gamma(500)) = inf
