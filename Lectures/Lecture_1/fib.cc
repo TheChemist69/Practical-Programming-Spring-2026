@@ -12,7 +12,7 @@ int fib(int n) {
 int main(int argc,char** argv){
 int n=std::stoi(argv[1]);
 std::cout << "n=" << n << "\n";
-
+c
 for (int i = 0; i <= n+1; i++) std::cout << "fib(" << i << ")=" << fib(i) << std::endl;
 return 0;
 }
