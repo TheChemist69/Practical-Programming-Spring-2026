@@ -16,6 +16,7 @@ Gamma(8) = 5040
 Gamma(9) = 40320
 Gamma(10) = 362880
 Gamma(500) = inf
+Gamma(-2) = 6.41326e+15
 ------------------------
 task 3: Computing the Natural Logarithm of the Gamma Function
 ln(Gamma(1)) = -1.09351e-08
@@ -29,3 +30,4 @@ ln(Gamma(8)) = 8.52516
 ln(Gamma(9)) = 10.6046
 ln(Gamma(10)) = 12.8018
 ln(Gamma(500)) = inf
+ln(Gamma(-2)) = nan

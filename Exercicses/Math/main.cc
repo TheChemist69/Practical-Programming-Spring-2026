@@ -13,7 +13,7 @@ int main() {
 
      // task 2, computing the gamma function
      std::cout << "task 2: Computing the Gamma Function" << "\n";
-     double test_values[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 500.0};
+     double test_values[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 500.0, -2.0};
 
      for (double x : test_values) {
           double result = task_2::fgamma(x);
