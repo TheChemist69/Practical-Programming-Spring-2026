@@ -7,25 +7,22 @@ Out.txt : main
 	@cat Out.txt
 
 main : main.o task_1.o task_2.o task_3.o
-	$(CXX) main.o task_1.o task_2.o task_3.o -o main $(LDLIBS)
+	$(CXX) $^ -o $@ $(LDLIBS)
 
-main.o: task_1.h task_2.h task_3.h main.cc
-	$(CXX) $(CXXFLAGS) -c main.cc #-o main.o
+main.o: main.cc task_1.h task_2.h task_3.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-task_1.o: task_1.h task_1.cc
-	$(CXX) $(CXXFLAGS) -c task_1.cc #-o task_1.o
+task_1.o: task_1.cc task_1.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-task_2.o: task_2.h task_2.cc
-	$(CXX) $(CXXFLAGS) -c task_2.cc #-o task_2.o
+task_2.o: task_2.cc task_2.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-task_3.o: task_3.h task_3.cc 
-	$(CXX) $(CXXFLAGS) -c task_3.cc #-o task_3.o
-
-
-
+task_3.o: task_3.cc task_3.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	$(RM)  main main.o Out.txt *.o
+	$(RM) main main.o Out.txt *.o
 
 test:
 	@echo CXX
