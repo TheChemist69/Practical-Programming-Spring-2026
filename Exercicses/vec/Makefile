@@ -1,22 +1,25 @@
- CXX = g++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++23 -O
-LDLIBS = -lstdc++ -lm
+CXX = g++
+CXXFLAGS = -Wall -Wextra -std=c++14
+TARGET = main
+OBJS = main.o
 
+
+all: run
+run: $(TARGET)
+	./$(TARGET) > Out.txt
+	@cat Out.txt
 Out.txt : main
 	./main > Out.txt
 	@cat Out.txt
 
-main : main.o vec.o
-	$(CXX) $^ -o $@ $(LDLIBS)
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
 
 main.o: main.cc vec.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-vec.o: vec.cc vec.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c main.cc
 
 clean:
-	$(RM) main main.o Out.txt *.o
+	rm -f $(TARGET) $(OBJS)
 
 test:
 	@echo CXX
