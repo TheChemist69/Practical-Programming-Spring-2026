@@ -1,0 +1,291 @@
+╔══════════════════════════════════════════════════════════╗
+║     pp:: Linear Algebra Library — Full Test Suite       ║
+╚══════════════════════════════════════════════════════════╝
+
+══════════════════════════════════════════════════════════
+  pp::vector — basics
+══════════════════════════════════════════════════════════
+
+  ── Construction ──
+  [PASS] Default constructor creates empty vector
+  [PASS] vector(4) has size 4
+  [PASS] vector(4) is zero-initialized
+  [PASS] Initializer list {1,2,3} has size 3
+  [PASS] Initializer list values correct
+  ── Element access (operator[]) ──
+  [PASS] Write vi[1]=42, read vi[1]==42
+  ── Resize ──
+  [PASS] resize(5) → size 5
+  [PASS] resize preserves existing data
+  [PASS] resize zero-fills new elements
+  [PASS] resize(2) shrinks to size 2
+  [PASS] shrink preserves surviving data
+
+══════════════════════════════════════════════════════════
+  pp::vector — arithmetic
+══════════════════════════════════════════════════════════
+
+  ── Addition (a + b) ──
+    a = { 1, 2, 3 }
+    b = { 4, 5, 6 }
+  a+b = { 5, 7, 9 }
+  [PASS] a+b = {5,7,9}
+  ── Subtraction (a - b) ──
+  a-b = { -3, -3, -3 }
+  [PASS] a-b = {-3,-3,-3}
+  ── Unary negation (-a) ──
+   -a = { -1, -2, -3 }
+  [PASS] -a = {-1,-2,-3}
+  ── Scalar multiplication (a * 3) ──
+  a*3 = { 3, 6, 9 }
+  [PASS] a*3 = {3,6,9}
+  ── Scalar multiplication (2 * a) ──
+  2*a = { 2, 4, 6 }
+  [PASS] 2*a = {2,4,6}
+  ── Scalar division (b / 2) ──
+  b/2 = { 2, 2.5, 3 }
+  [PASS] b/2 = {2,2.5,3}
+  ── Compound assignment (+=, -=, *=, /=) ──
+  [PASS] a += b → {5,7,9}
+  [PASS] a -= b → {1,2,3}
+  [PASS] a *= 10 → {10,20,30}
+  [PASS] a /= 5 → {2,4,6}
+
+══════════════════════════════════════════════════════════
+  pp::vector — dot, norm, map, approx, print
+══════════════════════════════════════════════════════════
+
+  ── Dot product ──
+    a·b (member) = 32.000000
+    a·b (free)   = 32.000000
+  [PASS] a.dot(b) = 1*4 + 2*5 + 3*6 = 32
+  [PASS] dot(a,b) = 32 (free function)
+  ── Norm ──
+    ||{3,4}|| = 5.000000
+  [PASS] ||{3,4}|| = 5
+  ── Map (apply function element-wise) ──
+    sqrt({1,4,9,16}) = { 1, 2, 3, 4 }
+  [PASS] map(sqrt) = {1,2,3,4}
+    2*{1,2,3}        = { 2, 4, 6 }
+  [PASS] map(2x) = {2,4,6}
+  ── Approximate equality (approx) ──
+  [PASS] approx(a, a) = true (identical)
+  [PASS] approx(a, a+tiny) = true (within default tol)
+  [PASS] approx(a, b) = false (different vectors)
+  [PASS] approx off by 0.1 with default tol → false
+  [PASS] approx off by 0.1 with acc=0.2 → true
+  [PASS] approx with different sizes → false
+  ── Print (visual check) ──
+    v.print("vec = "): vec =         1         2         3 
+  ── to_string ──
+    a.to_string() = { 1, 2, 3 }
+  [PASS] to_string produces non-empty output
+
+══════════════════════════════════════════════════════════
+  pp::matrix — basics
+══════════════════════════════════════════════════════════
+
+  ── Construction ──
+  [PASS] Default constructor → 0×0
+  [PASS] matrix(3,4) → 3 rows, 4 cols
+  [PASS] matrix(3,4) zero-initialized
+  ── Element access: operator[i,j], operator(i,j), get/set ──
+  [PASS] M[1,2] = 42 via operator[i,j]
+  [PASS] M(1,2) = 42 via operator(i,j)
+  [PASS] M.get(1,2) = 42
+  [PASS] M.set(0,3,-7.5) then get(0,3) == -7.5
+  [PASS] M(2,0) = 99, read via M[2,0]
+  ── Column access (operator[j] returns column vector) ──
+  [PASS] Column 0 = {1,2,3}
+  ── Resize ──
+  [PASS] resize(4,5) → 4×5
+  [PASS] resize preserves existing data
+  [PASS] resize zero-fills new elements
+  ── Set to identity (setid) ──
+  [PASS] setid turns arbitrary 4×4 into identity
+    I = 
+        1         0         0         0 
+        0         1         0         0 
+        0         0         1         0 
+        0         0         0         1 
+
+  ── Identity factory (matrix::identity) ──
+  [PASS] matrix::identity(3) is 3×3 identity
+  ── Random factory (matrix::random) ──
+  [PASS] random(3,4) has correct dimensions
+  [PASS] random matrix has non-zero entries
+
+══════════════════════════════════════════════════════════
+  pp::matrix — arithmetic
+══════════════════════════════════════════════════════════
+
+    A = 
+1	2
+3	4
+    B = 
+5	6
+7	8
+  ── Addition (A + B) ──
+  [PASS] A+B correct
+  ── Subtraction (A - B) ──
+  [PASS] A-B correct
+  ── Unary negation (-A) ──
+  [PASS] -A correct
+  ── Scalar multiplication (A * 3,  2 * A) ──
+  [PASS] A*3 correct
+  [PASS] 2*A correct
+  ── Scalar division (B / 2) ──
+  [PASS] B/2 correct
+  ── Compound assignment (+=, -=, *=, /=) ──
+  [PASS] A += B
+  [PASS] A -= B back to original
+  [PASS] A *= 10
+  [PASS] A /= 5
+  ── Matrix-vector multiplication (A * v) ──
+    A * {1,2} = { 5, 11 }
+  [PASS] A*v = {1*1+2*2, 3*1+4*2} = {5,11}
+  ── Matrix-matrix multiplication (A * B) ──
+    A * B = 
+19	22
+43	50
+  [PASS] A*B correct
+
+══════════════════════════════════════════════════════════
+  pp::matrix — transpose, norm, print
+══════════════════════════════════════════════════════════
+
+  ── Transpose ──
+  [PASS] transpose swaps dimensions (2×3 → 3×2)
+  [PASS] transpose row 0 → col 0
+  [PASS] transpose row 1 → col 1
+  ── T() (alias for transpose) ──
+  [PASS] T() gives same result as transpose()
+  ── Frobenius norm ──
+    ||[[1,2],[3,4]]||_F = 5.477226
+  [PASS] Frobenius norm = sqrt(30)
+  ── Print (visual check) ──
+    A = 
+        1         2         3 
+        4         5         6 
+
+  ── to_string ──
+  [PASS] to_string produces non-empty output
+
+══════════════════════════════════════════════════════════
+  QR decomposition (modified Gram-Schmidt)
+══════════════════════════════════════════════════════════
+
+    A (5×5) random matrix
+
+  ── Decomposition properties ──
+  [PASS] R is upper triangular
+  [PASS] Q^T Q = I (orthonormal columns)
+  [PASS] Q R = A (reconstruction)
+  ── Linear solve (Ax = b) ──
+  [PASS] A x = b
+  ── Determinant ──
+    det(A) = 0.035180
+  [PASS] det is non-zero for random matrix
+  ── Inverse ──
+  [PASS] A * A^{-1} = I
+  ── Tall matrix QR (8×4) ──
+  [PASS] R is upper triangular (tall)
+  [PASS] Q^T Q = I (tall)
+  [PASS] Q R = A (tall)
+
+══════════════════════════════════════════════════════════
+  LU decomposition (Doolittle, partial pivoting)
+══════════════════════════════════════════════════════════
+
+    A (5×5) random matrix
+
+  ── Decomposition properties ──
+  [PASS] L is lower triangular
+  [PASS] L has unit diagonal
+  [PASS] U is upper triangular
+  [PASS] P A = L U
+  ── Linear solve (Ax = b) ──
+  [PASS] A x = b
+  ── Determinant ──
+    det(A) = -0.004209
+  [PASS] det is non-zero
+  ── Inverse ──
+  [PASS] A * A^{-1} = I
+
+══════════════════════════════════════════════════════════
+  Cholesky decomposition (A = LL^T)
+══════════════════════════════════════════════════════════
+
+    A (5×5) symmetric positive definite
+
+  ── Decomposition properties ──
+  [PASS] L is lower triangular
+  [PASS] L L^T = A
+  ── Linear solve (Ax = b) ──
+  [PASS] A x = b
+  ── Determinant ──
+    det(A) = 17.805622
+  [PASS] det > 0 for SPD matrix
+  ── Inverse ──
+  [PASS] A * A^{-1} = I
+
+══════════════════════════════════════════════════════════
+  QR decomposition (Householder reflections)
+══════════════════════════════════════════════════════════
+
+    A (5×5) random matrix
+
+  ── Decomposition properties ──
+  [PASS] R is upper triangular
+  [PASS] Q^T Q = I
+  [PASS] Q R = A
+  ── Linear solve (Ax = b) ──
+  [PASS] A x = b
+  ── Determinant ──
+    det(A) = -0.000743
+  [PASS] det is non-zero
+  ── Inverse ──
+  [PASS] A * A^{-1} = I
+  ── Tall matrix QR (8×4) ──
+  [PASS] R is upper triangular (tall)
+  [PASS] Q^T Q = I (tall)
+  [PASS] Q R = A (tall)
+
+══════════════════════════════════════════════════════════
+  QR decomposition (Givens rotations)
+══════════════════════════════════════════════════════════
+
+    A (5×5) random matrix
+
+  ── Decomposition properties ──
+  [PASS] R is upper triangular
+  [PASS] Q^T Q = I
+  [PASS] Q R = A
+  ── Linear solve (Ax = b) ──
+  [PASS] A x = b
+  ── Determinant ──
+    det(A) = 0.029213
+  [PASS] det is non-zero
+  ── Inverse ──
+  [PASS] A * A^{-1} = I
+  ── Tall matrix QR (8×4) ──
+  [PASS] R is upper triangular (tall)
+  [PASS] Q^T Q = I (tall)
+  [PASS] Q R = A (tall)
+
+══════════════════════════════════════════════════════════
+  Cross-validation: determinant agreement
+══════════════════════════════════════════════════════════
+
+    det (QR Gram-Schmidt)       = 0.012258
+    det (LU partial pivoting)    = 0.012258
+    det (Householder)            = 0.012258
+    det (Givens)                 = 0.012258
+
+  [PASS] QR det ≈ LU det
+  [PASS] QR det ≈ Householder det
+  [PASS] QR det ≈ Givens det
+
+══════════════════════════════════════════════════════════
+  TOTAL:  109 PASS,  0 FAIL
+══════════════════════════════════════════════════════════

@@ -1,6 +1,5 @@
 // "matrix.h" header file.
 // Matrix class for linear algebra.
-// Only doubles, no templates needed.
 #pragma once
 
 #include <vector>
@@ -27,6 +26,12 @@ public:
     int rows() const;
     int columns() const;
 
+    // Resize
+    void resize(int n, int m);
+
+    // Set to identity matrix (in-place)
+    void setid();
+
     // Unary negation
     pp::matrix operator-() const;
 
@@ -35,8 +40,16 @@ public:
     const pp::vector& operator[](int j) const;
 
     // Element access: A[i,j] (C++23 multidimensional subscript)
-    double& operator[](int i, int j);
-    double  operator[](int i, int j) const;
+    NUMBER& operator[](int i, int j);
+    NUMBER  operator[](int i, int j) const;
+
+    // Element access: A(i,j)
+    NUMBER& operator()(int i, int j);
+    NUMBER  operator()(int i, int j) const;
+
+    // get/set element access
+    NUMBER get(int i, int j) const;
+    void set(int i, int j, NUMBER value);
 
     // Static factory methods
     static pp::matrix identity(int n);
@@ -44,6 +57,7 @@ public:
 
     // Transpose
     pp::matrix transpose() const;
+    pp::matrix T() const;
 
     // Matrix-vector multiplication
     pp::vector operator*(const pp::vector& v) const;
@@ -56,23 +70,26 @@ public:
     pp::matrix operator-(const pp::matrix& B) const;
 
     // Scalar multiplication / division
-    pp::matrix operator*(double s) const;
-    pp::matrix operator/(double s) const;
+    pp::matrix operator*(NUMBER s) const;
+    pp::matrix operator/(NUMBER s) const;
 
     // Compound assignment operators
     pp::matrix& operator+=(const pp::matrix& B);
     pp::matrix& operator-=(const pp::matrix& B);
-    pp::matrix& operator*=(double s);
-    pp::matrix& operator/=(double s);
+    pp::matrix& operator*=(NUMBER s);
+    pp::matrix& operator/=(NUMBER s);
 
     // Frobenius norm
-    double norm() const;
+    NUMBER norm() const;
+
+    // Print to stdout
+    void print(std::string s = "") const;
 
     // String representation
     std::string to_string() const;
 };
 
 // Scalar * matrix (free function)
-pp::matrix operator*(double s, const pp::matrix& A);
+pp::matrix operator*(NUMBER s, const pp::matrix& A);
 
 } // namespace pp

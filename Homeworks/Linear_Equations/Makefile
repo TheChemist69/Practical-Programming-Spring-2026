@@ -2,16 +2,30 @@ CXXFLAGS = -Wall -Wextra -std=c++23 -O2
 LDLIBS = -lstdc++ -lm
 TIME = /usr/bin/time --format "$$N %e" --append --output $@
 
-OBJS = main.o vector.o matrix.o qr.o lu.o cholesky.o householder.o givens.o
+LIB_OBJS = vector.o matrix.o qr.o lu.o cholesky.o householder.o givens.o
+MAIN_OBJS = main.o $(LIB_OBJS)
+TEST_OBJS = test.o $(LIB_OBJS)
+
+all : Out.txt Test.txt plot.svg
 
 Out.txt : main
 	./main > Out.txt
 	@cat Out.txt
 
-main : $(OBJS)
+Test.txt : test
+	./test > Test.txt
+	@cat Test.txt
+
+main : $(MAIN_OBJS)
+	$(CXX) $^ -o $@ $(LDLIBS)
+
+test : $(TEST_OBJS)
 	$(CXX) $^ -o $@ $(LDLIBS)
 
 main.o : main.cc vector.h matrix.h qr.h lu.h cholesky.h householder.h givens.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+test.o : test.cc vector.h matrix.h qr.h lu.h cholesky.h householder.h givens.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 vector.o : vector.cc vector.h
@@ -46,6 +60,6 @@ plot.svg : out.times.data plot_times.gnuplot
 	gnuplot plot_times.gnuplot
 
 clean :
-	$(RM) main *.o Out.txt out.times.data out err plot.svg
+	$(RM) main test *.o Out.txt Test.txt out.times.data out err plot.svg
 
-.PHONY : clean
+.PHONY : clean all
