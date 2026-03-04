@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <string>
 #include <cmath>
+#include <random>
 #include "vector.h"
 #include "matrix.h"
 #include "qr.h"
