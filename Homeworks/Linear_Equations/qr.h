@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <algorithm>
 #include "matrix.h"
 
 namespace pp {
@@ -10,6 +11,7 @@ class qr {
 public:
     pp::matrix Q;
     pp::matrix R;
+    int det_sign; // sign of det(Q): +1 or -1
 
     // Constructor: perform QR-decomposition of A (n×m, n >= m)
     // using modified Gram-Schmidt orthogonalization.
@@ -36,6 +38,34 @@ public:
                 Q[j] = Q[j] - Q[i] * R[i, j];
             }
         }
+
+        // Compute sign of det(Q) for square matrices
+        // (GS always produces positive R diagonal, so sign comes from Q)
+        det_sign = 1;
+        if (n == m) {
+            pp::matrix W = Q;
+            for (int k = 0; k < n; k++) {
+                int pivot = k;
+                double max_val = std::abs(W[k, k]);
+                for (int ii = k + 1; ii < n; ii++) {
+                    if (std::abs(W[ii, k]) > max_val) {
+                        max_val = std::abs(W[ii, k]);
+                        pivot = ii;
+                    }
+                }
+                if (pivot != k) {
+                    for (int jj = k; jj < n; jj++)
+                        std::swap(W[k, jj], W[pivot, jj]);
+                    det_sign = -det_sign;
+                }
+                for (int ii = k + 1; ii < n; ii++) {
+                    double factor = W[ii, k] / W[k, k];
+                    for (int jj = k + 1; jj < n; jj++)
+                        W[ii, jj] -= factor * W[k, jj];
+                }
+                if (W[k, k] < 0) det_sign = -det_sign;
+            }
+        }
     }
 
     // Solve QRx = b  =>  Rx = Q^T b  (back-substitution)
@@ -58,10 +88,10 @@ public:
         return x;
     }
 
-    // Determinant of the original matrix (product of R's diagonal)
+    // Determinant of the original matrix: det(Q) * product(R diagonal)
     double det() const {
         int m = R.columns();
-        double d = 1.0;
+        double d = det_sign;
         for (int i = 0; i < m; i++) {
             d *= R[i, i];
         }

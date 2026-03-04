@@ -12,6 +12,7 @@ class householder_qr {
 public:
     pp::matrix Q;
     pp::matrix R;
+    int reflection_count; // number of Householder reflections applied
 
     // Constructor: perform QR-decomposition of A (n×m, n >= m)
     // using Householder reflections.
@@ -21,6 +22,7 @@ public:
 
         R = A; // work on a copy
         Q = pp::matrix::identity(n);
+        reflection_count = 0;
 
         for (int k = 0; k < m; k++) {
             // Extract the subcolumn x = R[k:n, k]
@@ -44,6 +46,8 @@ public:
 
             double v_dot = v.dot(v);
             if (v_dot < 1e-24) continue;
+
+            reflection_count++;
 
             // Apply Householder reflection to R:
             // R[k:n, k:m] -= 2 * v * (v^T * R[k:n, k:m]) / (v^T v)
@@ -106,10 +110,10 @@ public:
         return x;
     }
 
-    // Determinant (product of R diagonal)
+    // Determinant: det(A) = det(Q) * det(R), det(Q) = (-1)^reflections
     double det() const {
         int m = R.columns();
-        double d = 1.0;
+        double d = (reflection_count % 2 == 0) ? 1.0 : -1.0;
         for (int i = 0; i < m; i++) {
             d *= R[i, i];
         }
