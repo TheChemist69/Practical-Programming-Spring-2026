@@ -1,6 +1,6 @@
 set terminal svg enhanced size 800,600 background rgb "white"
 set output "plot_convergence_rmax.svg"
-set title "Convergence of ground state energy with r_{max} (Δr=0.3)"
+set title "Convergence of E_0 with r_{max}  (fixed {/Symbol D}r = 0.1 a_0)"
 set xlabel "r_{max} [Bohr radii]"
 set ylabel "E_0 [Hartree]"
 set grid

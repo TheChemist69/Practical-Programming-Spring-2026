@@ -222,8 +222,8 @@ void task_C_timing(int N) {
 // ──────────────────────────────────────────────────────────────────
 int main(int argc, char* argv[]) {
     // Parse command line
-    double rmax = 10.0;
-    double dr = 0.3;
+    double rmax = 25.0;
+    double dr = 0.1;
     std::string mode = "all";
 
     for (int i = 1; i < argc; i++) {

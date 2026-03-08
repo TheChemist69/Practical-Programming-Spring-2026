@@ -1,6 +1,6 @@
 set terminal svg enhanced size 800,600 background rgb "white"
 set output "plot_times.svg"
-set title "Jacobi diagonalization: scaling with matrix size"
+set title "Jacobi diagonalization: O(N^3) scaling  (cyclic sweeps, random symmetric matrix)"
 set xlabel "Matrix size N"
 set ylabel "Time [seconds]"
 set grid

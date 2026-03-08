@@ -8,7 +8,7 @@ MAIN_OBJS = main.o $(LIB_OBJS)
 all : Out.txt plot_convergence_dr.svg plot_convergence_rmax.svg plot_wavefunctions.svg
 
 Out.txt : main
-	./main -rmax 10 -dr 0.3 > Out.txt
+	./main -rmax 25 -dr 0.1 > Out.txt
 	@cat Out.txt
 
 main : $(MAIN_OBJS)

@@ -1,6 +1,6 @@
 set terminal svg enhanced size 800,600 background rgb "white"
 set output "plot_convergence_dr.svg"
-set title "Convergence of ground state energy with grid spacing Δr (r_{max}=10)"
+set title "Convergence of E_0 with grid spacing {/Symbol D}r  (fixed r_{max} = 25 a_0)"
 set xlabel "Δr [Bohr radii]"
 set ylabel "E_0 [Hartree]"
 set grid

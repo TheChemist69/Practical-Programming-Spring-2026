@@ -1,6 +1,6 @@
 set terminal svg enhanced size 900,700 background rgb "white"
 set output "plot_wavefunctions.svg"
-set title "Hydrogen s-wave reduced radial wave functions f_k(r)"
+set title "Hydrogen s-wave radial wave functions f_k(r)  (r_{max} = 25 a_0, {/Symbol D}r = 0.1 a_0)"
 set xlabel "r [Bohr radii]"
 set ylabel "f(r)"
 set grid
