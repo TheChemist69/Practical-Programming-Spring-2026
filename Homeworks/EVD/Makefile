@@ -1,6 +1,5 @@
 CXXFLAGS = -Wall -Wextra -std=c++23 -O2
 LDLIBS = -lstdc++ -lm
-TIME = /usr/bin/time --format "$$N %e" --append --output $@
 
 LIB_OBJS = vector.o matrix.o evd.o
 MAIN_OBJS = main.o $(LIB_OBJS)
@@ -28,10 +27,10 @@ evd.o : evd.cc evd.h matrix.h vector.h
 
 # ── Convergence studies ──────────────────────────────────────────
 convergence_dr.data : main
-	./main -rmax 10 -dr 0.3 -mode convergence_dr
+	./main -rmax 25 -mode convergence_dr
 
 convergence_rmax.data : main
-	./main -rmax 10 -dr 0.3 -mode convergence_rmax
+	./main -dr 0.1 -mode convergence_rmax
 
 # ── Wavefunctions (produced alongside Out.txt) ──────────────────
 wavefunctions.data : Out.txt
@@ -49,9 +48,10 @@ plot_wavefunctions.svg : wavefunctions.data plot_wavefunctions.gnuplot
 # ── Timing / scaling (Task C) ───────────────────────────────────
 Ns := $(shell seq 20 5 80)
 out.times.data : main
+	>$@
 	for N in $(Ns); do \
-		$(TIME) ./main -size $$N & \
-	done; wait
+		./main -size $$N >> $@ ; \
+	done
 	sort -n $@ -o $@
 
 plot_times.svg : out.times.data plot_times.gnuplot

@@ -58,6 +58,8 @@ V*V^T (should be I):
 
 ||V*V^T - I|| = 8.05868e-16
 
+Optimized variant: ||V^T*A*V - D|| = 4.43997e-09
+
 === Task B: Hydrogen atom (rmax=25.00, dr=0.1000) ===
 
 Lowest eigenvalues (k=1..10):
@@ -75,5 +77,7 @@ Lowest eigenvalues (k=1..10):
 
 Wave function data written to wavefunctions.data
 
+Convergence study: varying dr (fixed rmax=25.0)
 Convergence (dr) data written to convergence_dr.data
+Convergence study: varying rmax (fixed dr=0.10)
 Convergence (rmax) data written to convergence_rmax.data

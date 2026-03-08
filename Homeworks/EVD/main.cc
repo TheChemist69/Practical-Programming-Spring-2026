@@ -5,9 +5,61 @@
 #include <cstring>
 #include <fstream>
 #include <string>
+#include <algorithm>
+#include <numeric>
+#include <chrono>
 #include "vector.h"
 #include "matrix.h"
 #include "evd.h"
+
+// ──────────────────────────────────────────────────────────────────
+// Helper: build hydrogen s-wave Hamiltonian on equidistant grid
+//
+// The s-wave (l=0) radial Schrödinger equation reads:
+//   -(1/2)f'' - (1/r)f = εf
+// Discretized on grid r_i = i·dr with three-point finite differences
+// for f'', this becomes H·f = ε·f, where H = K + W with
+//   K_ij = -(1/2Δr²) × tridiagonal(-1, 2, -1)
+//   W_ij = δ_ij × (-1/r_i)
+// Boundary conditions f(0)=0 and f(rmax)=0 are built in.
+// ──────────────────────────────────────────────────────────────────
+pp::matrix build_hydrogen_H(double rmax, double dr, int& npoints, pp::vector& r) {
+    npoints = static_cast<int>(rmax / dr) - 1;
+    r = pp::vector(npoints);
+    for (int i = 0; i < npoints; i++) r[i] = dr * (i + 1);
+
+    pp::matrix H(npoints, npoints);
+    // Kinetic energy: K = -(1/2Δr²) × tridiag(1, -2, 1)
+    for (int i = 0; i < npoints - 1; i++) {
+        H[i, i]     = -2 * (-0.5 / dr / dr);
+        H[i, i + 1] =  1 * (-0.5 / dr / dr);
+        H[i + 1, i] =  1 * (-0.5 / dr / dr);
+    }
+    H[npoints - 1, npoints - 1] = -2 * (-0.5 / dr / dr);
+    // Potential energy: W_ii = -1/r_i  (Coulomb)
+    for (int i = 0; i < npoints; i++) H[i, i] += -1.0 / r[i];
+    return H;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Helper: return sorted eigenvalue indices (ascending)
+// ──────────────────────────────────────────────────────────────────
+std::vector<int> sorted_indices(const pp::vector& w) {
+    int n = w.size();
+    std::vector<int> idx(n);
+    std::iota(idx.begin(), idx.end(), 0);
+    std::sort(idx.begin(), idx.end(), [&](int a, int b) {
+        return w[a] < w[b];
+    });
+    return idx;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Helper: find minimum eigenvalue using std::min_element
+// ──────────────────────────────────────────────────────────────────
+double min_eigenvalue(const pp::vector& w) {
+    return *std::min_element(w.data.begin(), w.data.end());
+}
 
 // ──────────────────────────────────────────────────────────────────
 // Task A: Test the Jacobi diagonalization on a random symmetric matrix
@@ -65,6 +117,13 @@ void task_A() {
     printf("V*V^T (should be I):\n");
     VVt.print("");
     printf("||V*V^T - I|| = %g\n\n", diff4.norm());
+
+    // Also verify the optimized variant gives the same result
+    pp::EVD evd_opt = pp::EVD::optimized(A);
+    pp::matrix D_opt(n, n);
+    for (int i = 0; i < n; i++) D_opt[i, i] = evd_opt.w[i];
+    pp::matrix diff_opt = evd_opt.V.T() * A * evd_opt.V - D_opt;
+    printf("Optimized variant: ||V^T*A*V - D|| = %g\n\n", diff_opt.norm());
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -73,39 +132,23 @@ void task_A() {
 void task_B(double rmax, double dr) {
     printf("=== Task B: Hydrogen atom (rmax=%.2f, dr=%.4f) ===\n\n", rmax, dr);
 
-    int npoints = (int)(rmax / dr) - 1;
+    int npoints;
+    pp::vector r;
+    pp::matrix H = build_hydrogen_H(rmax, dr, npoints, r);
+
     if (npoints < 2) {
         printf("Too few grid points (%d). Increase rmax or decrease dr.\n", npoints);
         return;
     }
 
-    // Build the grid
-    pp::vector r(npoints);
-    for (int i = 0; i < npoints; i++) r[i] = dr * (i + 1);
-
-    // Build the Hamiltonian matrix H = K + W
-    pp::matrix H(npoints, npoints);
-    for (int i = 0; i < npoints - 1; i++) {
-        H[i, i]     = -2 * (-0.5 / dr / dr);
-        H[i, i + 1] =  1 * (-0.5 / dr / dr);
-        H[i + 1, i] =  1 * (-0.5 / dr / dr);
-    }
-    H[npoints - 1, npoints - 1] = -2 * (-0.5 / dr / dr);
-    for (int i = 0; i < npoints; i++) H[i, i] += -1.0 / r[i];
-
     // Diagonalize
     pp::EVD evd(H);
 
-    // Print lowest eigenvalues and compare with exact: E_k = -1/(2k^2)
-    int nshow = std::min(npoints, 10);
-    // Sort eigenvalues to find lowest
-    // EVD eigenvalues may not be sorted; find the indices of the smallest ones
-    std::vector<int> idx(npoints);
-    for (int i = 0; i < npoints; i++) idx[i] = i;
-    std::sort(idx.begin(), idx.end(), [&](int a, int b) {
-        return evd.w[a] < evd.w[b];
-    });
+    // Sort eigenvalue indices (Jacobi does not guarantee sorted output)
+    auto idx = sorted_indices(evd.w);
 
+    // Print lowest eigenvalues and compare with exact: E_n = -1/(2n²)
+    int nshow = std::min(npoints, 10);
     printf("Lowest eigenvalues (k=1..%d):\n", nshow);
     printf("%5s %15s %15s %15s\n", "k", "numerical", "exact", "difference");
     for (int k = 0; k < nshow; k++) {
@@ -120,6 +163,8 @@ void task_B(double rmax, double dr) {
         std::ofstream fout("wavefunctions.data");
         fout << "# r  f1(r)  f2(r)  f3(r)  exact_f1(r)  exact_f2(r)  exact_f3(r)\n";
         int nwf = std::min(3, npoints);
+        // Normalization: sum_i |V_ik|^2 = 1, so f(r_i) = V_ik / sqrt(dr)
+        // ensures  sum_i |f(r_i)|^2 * dr = 1.
         double Const = 1.0 / std::sqrt(dr);
         for (int i = 0; i < npoints; i++) {
             fout << r[i];
@@ -134,11 +179,10 @@ void task_B(double rmax, double dr) {
                 }
                 fout << " " << sign * Const * evd.V[i, idx[k]];
             }
-            // Exact reduced radial wave functions f_k(r) = r * R_{k+1,0}(r)
-            // For hydrogen: f_n(r) = r * R_{n0}(r)
-            // n=1: f(r) = 2*r*exp(-r)
-            // n=2: f(r) = r/(2*sqrt(2)) * (2 - r) * exp(-r/2)
-            // n=3: f(r) = 2*r/(81*sqrt(3)) * (27 - 18*r + 2*r^2) * exp(-r/3)
+            // Exact reduced radial wave functions f_n(r) = r·R_{n0}(r)
+            // n=1: f(r) = 2r·exp(-r)
+            // n=2: f(r) = r/(2√2)·(2-r)·exp(-r/2)
+            // n=3: f(r) = 2r/(81√3)·(27-18r+2r²)·exp(-r/3)
             double ri = r[i];
             double f1_exact = 2.0 * ri * std::exp(-ri);
             double f2_exact = ri / (2.0 * std::sqrt(2.0)) * (2.0 - ri) * std::exp(-ri / 2.0);
@@ -152,28 +196,21 @@ void task_B(double rmax, double dr) {
 
 // ──────────────────────────────────────────────────────────────────
 // Convergence study: vary dr at fixed rmax
+// The finite-difference error in the kinetic energy scales as O(Δr²),
+// so we expect the ground state energy error ∝ Δr².
 // ──────────────────────────────────────────────────────────────────
 void convergence_dr(double rmax) {
     std::ofstream fout("convergence_dr.data");
     fout << "# dr  E0_numerical  E0_exact  error\n";
     double exact = -0.5;
+    printf("Convergence study: varying dr (fixed rmax=%.1f)\n", rmax);
     for (double dr = 0.05; dr <= 1.01; dr += 0.05) {
-        int npoints = (int)(rmax / dr) - 1;
+        int npoints;
+        pp::vector r;
+        pp::matrix H = build_hydrogen_H(rmax, dr, npoints, r);
         if (npoints < 2) continue;
-        pp::vector r(npoints);
-        for (int i = 0; i < npoints; i++) r[i] = dr * (i + 1);
-        pp::matrix H(npoints, npoints);
-        for (int i = 0; i < npoints - 1; i++) {
-            H[i, i]     = -2 * (-0.5 / dr / dr);
-            H[i, i + 1] =  1 * (-0.5 / dr / dr);
-            H[i + 1, i] =  1 * (-0.5 / dr / dr);
-        }
-        H[npoints - 1, npoints - 1] = -2 * (-0.5 / dr / dr);
-        for (int i = 0; i < npoints; i++) H[i, i] += -1.0 / r[i];
         pp::EVD evd(H);
-        // Find lowest eigenvalue
-        double e0 = evd.w[0];
-        for (int i = 1; i < npoints; i++) if (evd.w[i] < e0) e0 = evd.w[i];
+        double e0 = min_eigenvalue(evd.w);
         fout << dr << " " << e0 << " " << exact << " " << std::abs(e0 - exact) << "\n";
     }
     printf("Convergence (dr) data written to convergence_dr.data\n");
@@ -181,42 +218,51 @@ void convergence_dr(double rmax) {
 
 // ──────────────────────────────────────────────────────────────────
 // Convergence study: vary rmax at fixed dr
+// For small rmax the box artificially confines the electron, raising
+// the energy.  Once rmax >> Bohr radius the eigenvalue saturates at
+// the true bound-state energy.
 // ──────────────────────────────────────────────────────────────────
 void convergence_rmax(double dr) {
     std::ofstream fout("convergence_rmax.data");
     fout << "# rmax  E0_numerical  E0_exact  error\n";
     double exact = -0.5;
+    printf("Convergence study: varying rmax (fixed dr=%.2f)\n", dr);
     for (double rmax = 1.0; rmax <= 20.01; rmax += 1.0) {
-        int npoints = (int)(rmax / dr) - 1;
+        int npoints;
+        pp::vector r;
+        pp::matrix H = build_hydrogen_H(rmax, dr, npoints, r);
         if (npoints < 2) continue;
-        pp::vector r(npoints);
-        for (int i = 0; i < npoints; i++) r[i] = dr * (i + 1);
-        pp::matrix H(npoints, npoints);
-        for (int i = 0; i < npoints - 1; i++) {
-            H[i, i]     = -2 * (-0.5 / dr / dr);
-            H[i, i + 1] =  1 * (-0.5 / dr / dr);
-            H[i + 1, i] =  1 * (-0.5 / dr / dr);
-        }
-        H[npoints - 1, npoints - 1] = -2 * (-0.5 / dr / dr);
-        for (int i = 0; i < npoints; i++) H[i, i] += -1.0 / r[i];
         pp::EVD evd(H);
-        double e0 = evd.w[0];
-        for (int i = 1; i < npoints; i++) if (evd.w[i] < e0) e0 = evd.w[i];
+        double e0 = min_eigenvalue(evd.w);
         fout << rmax << " " << e0 << " " << exact << " " << std::abs(e0 - exact) << "\n";
     }
     printf("Convergence (rmax) data written to convergence_rmax.data\n");
 }
 
 // ──────────────────────────────────────────────────────────────────
-// Timing / scaling study (Task C)
+// Task C: Timing / scaling study
+// Compares standard vs. optimized Jacobi on a random symmetric matrix
+// of size N.  The optimized variant updates only the upper triangle
+// of the symmetric matrix, giving roughly 2× speedup.
 // ──────────────────────────────────────────────────────────────────
 void task_C_timing(int N) {
-    // Diagonalize a random symmetric NxN matrix; used for timing
     pp::matrix R = pp::matrix::random(N, N);
     pp::matrix A = R + R.T();
+
+    // Time standard Jacobi
+    auto t0 = std::chrono::high_resolution_clock::now();
     pp::EVD evd(A);
-    // Print the first eigenvalue so the compiler doesn't optimize away
-    printf("%d %g\n", N, evd.w[0]);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    double dt_std = std::chrono::duration<double>(t1 - t0).count();
+
+    // Time optimized Jacobi
+    auto t2 = std::chrono::high_resolution_clock::now();
+    pp::EVD evd_opt = pp::EVD::optimized(A);
+    auto t3 = std::chrono::high_resolution_clock::now();
+    double dt_opt = std::chrono::duration<double>(t3 - t2).count();
+
+    // Output: N  time_standard  time_optimized
+    printf("%d %.4f %.4f\n", N, dt_std, dt_opt);
 }
 
 // ──────────────────────────────────────────────────────────────────
