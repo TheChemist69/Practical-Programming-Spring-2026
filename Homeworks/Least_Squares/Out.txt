@@ -1,0 +1,21 @@
+=== Ordinary Least-Squares Fit ===
+=== ThX (224-Ra) radioactive decay (Rutherford & Soddy, 1902) ===
+
+Fit: ln(y) = c1 + c2*t
+  c1 = ln(a) = 4.958665 +/- 0.035402
+  c2 = -lam  = -0.170624 +/- 0.007157
+
+Derived quantities:
+  a      = 142.4035
+  lambda = 0.170624 +/- 0.007157  [1/day]
+  T_half = ln(2)/lambda = 4.0624 +/- 0.1704  [days]
+  Modern value (224-Ra): T_half = 3.6319 days
+
+Covariance matrix of the fit coefficients:
+  
+  0.00125 -0.000197 
+-0.000197  5.12e-05 
+
+Correlation coefficient rho_12 = -0.777772
+
+Data files written: data.txt, fit.txt, logdata.txt, logfit.txt
