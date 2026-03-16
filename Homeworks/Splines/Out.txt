@@ -1,0 +1,47 @@
+=== Spline Interpolation ===
+
+-- Task A: Linear Spline ----------------------------------------
+
+Data: x = 0, 1, ..., 9;  y = cos(x)
+
+  linterp(1.5) = +0.06207773   exact cos(1.5) = +0.07073720
+  linterp(4.7) = +0.00247044   exact cos(4.7) = -0.01238866
+  linterp(8.3) = -0.37518910   exact cos(8.3) = -0.43137684
+
+  linterp_integ(9.0) = +0.37718891   exact sin(9.0) = +0.41211849
+
+  Data files: cos_points.txt, linear_interp.txt
+
+-- Task B: Quadratic Spline -------------------------------------
+
+Debug tests (x = 1, 2, 3, 4, 5):
+
+  y = 1:    b = { 0, 0, 0, 0 }
+            c = { 0, 0, 0, 0 }
+  y = x:    b = { 1, 1, 1, 1 }
+            c = { 0, 0, 0, 0 }
+  y = x^2:  b = { 2, 4, 6, 8 }
+            c = { 1, 1, 1, 1 }
+
+Data: x = 0, 1, ..., 9;  y = sin(x)
+
+  qspline(1.5)       = +1.08968680   exact sin(1.5) = +0.99749499
+  qspline'(1.5)      = +0.06782644   exact cos(1.5) = +0.07073720
+  qspline_integ(9.0) = +1.86737614   exact 1-cos(9.0) = +1.91113026
+
+  Data files: sin_points.txt, quad_interp.txt
+
+-- Task C: Cubic Spline -----------------------------------------
+
+Data: x = 0, 1, ..., 9;  y = cos(x)
+
+  cspline(1.5)       = +0.08380947   exact cos(1.5)  = +0.07073720
+  cspline'(1.5)      = -1.01509468   exact -sin(1.5) = -0.99749499
+  cspline_integ(9.0) = +0.40899603   exact sin(9.0)  = +0.41211849
+
+  Comparison: gnuplot's 'smooth csplines' uses the same natural
+  cubic spline -- see plot_cubic.svg for overlay.
+
+  Data files: cubic_interp.txt
+
+All data files written successfully.
