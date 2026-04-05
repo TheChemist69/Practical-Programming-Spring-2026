@@ -1,0 +1,38 @@
+=== Task (6 points): Embedded RK + adaptive-step driver ===
+  Solving y' = f(x,y) with automatic step-size control.
+
+  [A1] Harmonic oscillator test: u'' = -u
+    points: 840, final |u-u_exact| = 2.075e-08
+    output: oscillator.data
+
+  [A2] Lotka-Volterra system (scipy-style benchmark)
+    points: 754
+    output: lotka_volterra.data
+
+=== Task (3 points): Relativistic orbit precession ===
+  Equation: u'' + u = 1 + eps*u^2, with u = 1/r.
+
+  [B1] Newtonian circular orbit: eps=0, u0=1, u0'=0
+    points: 1259
+    output: orbit_newtonian_circle.data
+
+  [B2] Newtonian elliptical orbit: eps=0, u0=1, u0'=-0.5
+    points: 1550
+    output: orbit_newtonian_ellipse.data
+
+  [B3] Relativistic precession: eps=0.01, u0=1, u0'=-0.5
+    points: 1533
+    output: orbit_relativistic.data
+
+=== Task (1 point): Three-body figure-8 solution ===
+  Integrating the 12-component planar 3-body state vector.
+    points: 225
+    output: figure8.data
+
+Data files written:
+  oscillator.data
+  lotka_volterra.data
+  orbit_newtonian_circle.data
+  orbit_newtonian_ellipse.data
+  orbit_relativistic.data
+  figure8.data
