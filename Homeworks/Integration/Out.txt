@@ -1,0 +1,35 @@
+=== Recursive open 4-point adaptive integrator ===
+Benchmark integrals on [0,1] with mixed absolute/relative tolerance
+  int_0_1_sqrt_x               Q= 0.666666679685 exact= 0.666666666667 |err|=1.302e-08 est=5.617e-07 tol=1.667e-06 calls=276 status=success PASS
+  int_0_1_inv_sqrt_x           Q= 1.99999999895 exact= 2 |err|=1.051e-09 est=6.149e-07 tol=3.000e-06 calls=123900 status=success PASS
+  int_0_1_sqrt_1_minus_x2      Q= 0.785398170579 exact= 0.785398163397 |err|=7.181e-09 est=4.223e-07 tol=1.785e-06 calls=384 status=success PASS
+  int_0_1_log_x_over_sqrt_x    Q=-3.99999999941 exact=-4 |err|=5.869e-10 est=6.138e-07 tol=5.000e-06 calls=302996 status=success PASS
+Summary: 4/4 benchmark checks passed
+Note: int_0_1_sqrt_1_minus_x2 exact value is pi/4 (checked analytically).
+
+=== Error function via integral representation ===
+erf(1) numeric  = 0.8427007929518846
+erf(1) reference= 0.84270079294971489
+|difference|    = 2.170e-12
+estimated error = 6.120e-09
+function calls  = 1200
+status          = success
+
+=== erf(1) convergence with eps=0 and decreasing acc ===
+  acc          |erf(1)-exact|    est_error        calls   status
+  1.0e-01    1.904e-04        6.024e-03          4   success
+  1.0e-02    1.904e-04        6.024e-03          4   success
+  1.0e-03    2.917e-05        3.044e-04         12   success
+  1.0e-04    4.296e-07        6.211e-05         28   success
+  1.0e-05    2.823e-08        4.835e-06         80   success
+  1.0e-06    1.250e-09        5.197e-07        188   success
+  1.0e-07    3.842e-11        6.034e-08        436   success
+  1.0e-08    2.132e-12        5.592e-09       1240   success
+  1.0e-09    7.461e-14        5.682e-10       2932   success
+  1.0e-10    2.731e-14        6.171e-11       6876   success
+
+Data files written:
+  benchmark_results.data
+  erf_curve.data
+  erf_tabulated.data
+  erf_acc_sweep.data

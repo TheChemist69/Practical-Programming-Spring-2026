@@ -1,0 +1,50 @@
+=== Two-dimensional test integrals ===
+  unit_circle_area     N=150000  I= 3.14346666667 exact= 3.14159265359 |err|=1.874e-03 est=4.237e-03
+  gaussian_2d          N=150000  I= 0.558278753768 exact= 0.557746285351 |err|=5.325e-04 est=5.588e-04
+
+=== Plain Monte Carlo scaling study ===
+  N=200     value= 0.560568888692 |err|= 2.823e-03 est= 1.617e-02 status=success
+  N=500     value= 0.569371712969 |err|= 1.163e-02 est= 9.636e-03 status=success
+  N=1000    value= 0.557810828674 |err|= 6.454e-05 est= 6.661e-03 status=success
+  N=2000    value= 0.549791222442 |err|= 7.955e-03 est= 4.883e-03 status=success
+  N=5000    value= 0.552237902733 |err|= 5.508e-03 est= 3.062e-03 status=success
+  N=10000   value= 0.560633274243 |err|= 2.887e-03 est= 2.165e-03 status=success
+  N=20000   value= 0.555685758485 |err|= 2.061e-03 est= 1.527e-03 status=success
+  N=50000   value= 0.557698405967 |err|= 4.788e-05 est= 9.641e-04 status=success
+  log-log slope(actual_error vs N): -0.4076 (expected about -0.5)
+
+=== Quasi-random vs pseudo-random scaling ===
+  N=200     plain|err|= 1.496e-02 quasi|err|= 6.597e-02
+  N=500     plain|err|= 1.117e-02 quasi|err|= 3.636e-02
+  N=1000    plain|err|= 4.985e-03 quasi|err|= 2.285e-02
+  N=2000    plain|err|= 1.241e-03 quasi|err|= 1.597e-02
+  N=5000    plain|err|= 7.139e-04 quasi|err|= 1.767e-03
+  N=10000   plain|err|= 2.549e-03 quasi|err|= 1.853e-03
+  N=20000   plain|err|= 1.508e-03 quasi|err|= 9.527e-04
+  N=50000   plain|err|= 1.193e-03 quasi|err|= 6.703e-04
+  slope plain = -0.4658, slope quasi = -0.9271
+
+=== Stratified vs plain scaling ===
+  N=200     plain|err|= 4.844e-03 strat|err|= 2.728e-02 calls_plain=200 calls_strat=200
+  N=500     plain|err|= 1.196e-02 strat|err|= 3.637e-03 calls_plain=500 calls_strat=500
+  N=1000    plain|err|= 3.929e-03 strat|err|= 4.774e-02 calls_plain=1000 calls_strat=1000
+  N=2000    plain|err|= 4.478e-03 strat|err|= 3.303e-03 calls_plain=2000 calls_strat=2000
+  N=5000    plain|err|= 2.779e-04 strat|err|= 5.897e-03 calls_plain=5000 calls_strat=5000
+  N=10000   plain|err|= 1.094e-03 strat|err|= 1.480e-02 calls_plain=10000 calls_strat=10000
+  N=20000   plain|err|= 1.566e-04 strat|err|= 8.672e-04 calls_plain=20000 calls_strat=20000
+  N=50000   plain|err|= 7.192e-04 strat|err|= 8.091e-04 calls_plain=50000 calls_strat=50000
+
+=== Difficult singular integral (not used for scaling fits) ===
+  N=1000   plain= 1.414679001 quasi= 2.351220034 strat= 1.329261720
+  N=3000   plain= 1.352410223 quasi= 1.667982896 strat= 1.281626175
+  N=10000  plain= 1.361800041 quasi= 1.436700493 strat= 1.208338165
+  N=30000  plain= 1.377053587 quasi= 1.398986593 strat= 1.362465420
+  exact = 1.3932039296856769
+  largest-N errors: plain=1.615e-02 quasi=5.783e-03 strat=3.074e-02
+
+Data files written:
+  two_dim_examples.data
+  plain_scaling.data
+  quasi_scaling.data
+  stratified_scaling.data
+  difficult_integral.data
