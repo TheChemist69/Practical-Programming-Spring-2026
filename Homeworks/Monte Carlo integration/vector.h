@@ -1,5 +1,8 @@
 // "vector.h" header file.
 // Column-vector class for linear algebra.
+//
+// In this Monte Carlo project, the same vector type is used for
+// integration points x, lower bounds a, and upper bounds b.
 #pragma once
 
 #ifdef LONG_DOUBLE

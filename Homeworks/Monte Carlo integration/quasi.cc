@@ -1,5 +1,10 @@
 // "quasi.cc" implementation file.
 // Low-discrepancy Monte Carlo integration with two-sequence error estimate.
+//
+// Core idea:
+// - Build deterministic low-discrepancy points from radical-inverse maps
+//   (Halton-style sequence in multiple prime bases).
+// - Run two sequence variants and compare them to estimate uncertainty.
 
 #include "quasi.h"
 
@@ -13,6 +18,7 @@ namespace pp {
 namespace {
 
 bool valid_box(const vector& a, const vector& b) {
+    // Same geometric validity criteria used by pseudo-random methods.
     if (a.size() <= 0 || a.size() != b.size()) {
         return false;
     }
@@ -25,6 +31,7 @@ bool valid_box(const vector& a, const vector& b) {
 }
 
 double box_volume(const vector& a, const vector& b) {
+    // Hyper-rectangle volume used to convert average value into integral.
     double volume = 1.0;
     for (int i = 0; i < a.size(); i++) {
         volume *= (b[i] - a[i]);
@@ -33,6 +40,8 @@ double box_volume(const vector& a, const vector& b) {
 }
 
 double radical_inverse(std::uint64_t index, int base) {
+    // Reflect the base-b digits of index across the decimal point.
+    // Example in base 2: index 5 (101b) -> 0.101b = 0.625.
     double value = 0.0;
     double factor = 1.0 / static_cast<double>(base);
 
@@ -46,6 +55,7 @@ double radical_inverse(std::uint64_t index, int base) {
 }
 
 std::vector<int> first_primes(int n) {
+    // Simple incremental prime generation; fast enough for small dimensions.
     std::vector<int> primes;
     if (n <= 0) {
         return primes;
@@ -82,6 +92,7 @@ double halton_integral_estimate(
         const std::vector<int>& bases,
         MCStatus& status,
         std::size_t& evals) {
+    // Build one deterministic estimate using a fixed set of Halton bases.
     const int dim = a.size();
     vector x(dim);
 
@@ -90,8 +101,10 @@ double halton_integral_estimate(
     evals = 0;
 
     for (int i = 0; i < n; i++) {
+        // Sequence index for this sample.
         const std::uint64_t idx = static_cast<std::uint64_t>(start_index + static_cast<std::size_t>(i));
         for (int k = 0; k < dim; k++) {
+            // Convert [0,1) low-discrepancy coordinate to [a_k,b_k].
             const double u = radical_inverse(idx, bases[static_cast<std::size_t>(k)]);
             x[k] = a[k] + u * (b[k] - a[k]);
         }
@@ -118,6 +131,7 @@ MCResult quasi_mc_two_sequences(
         const vector& b,
         int n,
         const QuasiOptions& options) {
+    // Reject malformed domain or impossible sequence parameters.
     if (!valid_box(a, b) || n <= 0 || options.start_index == 0 || options.first_base_offset < 0 || options.second_base_offset < 0) {
         return MCResult{
                 std::numeric_limits<double>::quiet_NaN(),
@@ -128,6 +142,7 @@ MCResult quasi_mc_two_sequences(
     }
 
     const int dim = a.size();
+    // Build enough primes for both base-offset windows.
     const int max_offset = (options.first_base_offset > options.second_base_offset)
             ? options.first_base_offset
             : options.second_base_offset;
@@ -136,6 +151,7 @@ MCResult quasi_mc_two_sequences(
     std::vector<int> bases_a(static_cast<std::size_t>(dim));
     std::vector<int> bases_b(static_cast<std::size_t>(dim));
     for (int k = 0; k < dim; k++) {
+        // Sequence A and B use different base blocks.
         bases_a[static_cast<std::size_t>(k)] = primes[static_cast<std::size_t>(options.first_base_offset + k)];
         bases_b[static_cast<std::size_t>(k)] = primes[static_cast<std::size_t>(options.second_base_offset + k)];
     }
@@ -166,7 +182,9 @@ MCResult quasi_mc_two_sequences(
     }
 
     return MCResult{
+            // Best estimate: average of both deterministic sequences.
             0.5 * (q1 + q2),
+            // Error proxy: disagreement between the two sequence estimates.
             std::abs(q1 - q2),
             evals_a + evals_b,
             MCStatus::success,

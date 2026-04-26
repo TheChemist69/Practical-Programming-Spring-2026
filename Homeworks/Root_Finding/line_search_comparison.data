@@ -1,0 +1,5 @@
+# problem method iterations f_evaluations jacobian_evaluations line_search_iterations residual_norm
+rosenbrock backtracking 100 844 100 543 0
+rosenbrock quadratic 76 376 76 147 9.9301366129890918e-14
+himmelblau backtracking 5 16 5 0 0
+himmelblau quadratic 5 16 5 0 0

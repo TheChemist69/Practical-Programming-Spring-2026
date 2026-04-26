@@ -1,5 +1,10 @@
 // "mc.cc" implementation file.
 // Plain and recursive stratified Monte Carlo integration.
+//
+// Implementation overview:
+// - plain_mc performs uniform random sampling in a box [a,b].
+// - stratified_mc recursively partitions [a,b] and allocates samples
+//   where pilot statistics indicate larger variance.
 
 #include "mc.h"
 
@@ -12,6 +17,9 @@ namespace pp {
 
 namespace {
 
+// Compact running statistics used for pilot samples.
+// We keep sum and sum of squares to estimate variance without
+// storing all sampled values.
 struct Stats {
     int count = 0;
     double sum = 0.0;
@@ -25,6 +33,7 @@ struct Stats {
 };
 
 double variance_from_stats(const Stats& s) {
+    // For empty stats we return zero variance so callers can keep logic simple.
     if (s.count <= 0) {
         return 0.0;
     }
@@ -37,6 +46,7 @@ double variance_from_stats(const Stats& s) {
 }
 
 double box_volume(const vector& a, const vector& b) {
+    // Hyper-rectangle volume = product of side lengths.
     double volume = 1.0;
     for (int i = 0; i < a.size(); i++) {
         volume *= (b[i] - a[i]);
@@ -45,6 +55,7 @@ double box_volume(const vector& a, const vector& b) {
 }
 
 bool valid_box(const vector& a, const vector& b) {
+    // Input is valid only when dimensions match and each upper bound is larger.
     if (a.size() <= 0 || a.size() != b.size()) {
         return false;
     }
@@ -57,6 +68,7 @@ bool valid_box(const vector& a, const vector& b) {
 }
 
 MCStatus merge_status(MCStatus a, MCStatus b) {
+    // Return the most severe status observed in recursive subcalls.
     if (a == MCStatus::non_finite_evaluation || b == MCStatus::non_finite_evaluation) {
         return MCStatus::non_finite_evaluation;
     }
@@ -91,12 +103,14 @@ MCResult stratified_recursive(
     }
 
     if (depth >= options.max_depth) {
+        // Stop refining and finish with plain sampling in the current sub-box.
         MCResult fallback = plain_mc(f, a, b, n, rng);
         fallback.status = MCStatus::max_depth_reached;
         return fallback;
     }
 
     if (n < options.nmin) {
+        // Not enough budget to run a meaningful pilot phase.
         return plain_mc(f, a, b, n, rng);
     }
 
@@ -108,6 +122,7 @@ MCResult stratified_recursive(
 
     vector mid(dim);
     for (int i = 0; i < dim; i++) {
+        // Candidate split location for each axis.
         mid[i] = 0.5 * (a[i] + b[i]);
     }
 
@@ -117,6 +132,7 @@ MCResult stratified_recursive(
 
     vector x(dim);
     for (int i = 0; i < pilot; i++) {
+        // Draw one uniform point in the current box.
         for (int k = 0; k < dim; k++) {
             x[k] = a[k] + u01(rng) * (b[k] - a[k]);
         }
@@ -133,6 +149,8 @@ MCResult stratified_recursive(
 
         total.add(fx);
         for (int k = 0; k < dim; k++) {
+            // For each dimension we record whether this sample lies
+            // on the left or right side of the midpoint split.
             if (x[k] < mid[k]) {
                 left[k].add(fx);
             } else {
@@ -142,6 +160,7 @@ MCResult stratified_recursive(
     }
 
     if (remaining <= 0) {
+        // Pilot-only estimate if no samples remain for recursive refinement.
         const double mean = total.sum / pilot;
         const double sigma = std::sqrt(variance_from_stats(total));
         const double volume = box_volume(a, b);
@@ -156,6 +175,7 @@ MCResult stratified_recursive(
     int best_dim = 0;
     double best_measure = -1.0;
     for (int k = 0; k < dim; k++) {
+        // Heuristic: split where left+right pilot variance is largest.
         const double measure = variance_from_stats(left[k]) + variance_from_stats(right[k]);
         if (measure > best_measure) {
             best_measure = measure;
@@ -167,6 +187,7 @@ MCResult stratified_recursive(
     double right_var = variance_from_stats(right[best_dim]);
 
     if (left_var <= 0.0 && right_var <= 0.0) {
+        // Flat pilot statistics: split budget evenly by using equal pseudo-variance.
         left_var = 1.0;
         right_var = 1.0;
     }
@@ -175,9 +196,11 @@ MCResult stratified_recursive(
     int n_right = 0;
 
     if (remaining == 1) {
+        // One sample left: send it to the noisier side.
         n_left = (left_var >= right_var) ? 1 : 0;
         n_right = 1 - n_left;
     } else {
+        // Allocate in proportion to pilot variance.
         const double ratio = left_var / (left_var + right_var);
         n_left = static_cast<int>(std::lround(ratio * remaining));
         n_left = std::clamp(n_left, 1, remaining - 1);
@@ -192,6 +215,7 @@ MCResult stratified_recursive(
     left_b[best_dim] = mid[best_dim];
     right_a[best_dim] = mid[best_dim];
 
+    // Recurse independently on both children and combine integrals.
     MCResult left_res = stratified_recursive(f, left_a, left_b, n_left, options, rng, depth + 1);
     MCResult right_res = stratified_recursive(f, right_a, right_b, n_right, options, rng, depth + 1);
 
@@ -213,6 +237,7 @@ MCResult plain_mc(
         const vector& b,
         int n,
         std::mt19937_64& rng) {
+    // Guard against malformed domain or invalid sample count.
     if (!valid_box(a, b) || n <= 0) {
         return MCResult{
                 std::numeric_limits<double>::quiet_NaN(),
@@ -232,6 +257,7 @@ MCResult plain_mc(
     double sum2 = 0.0;
 
     for (int i = 0; i < n; i++) {
+        // Generate one random point uniformly in [a,b].
         for (int k = 0; k < dim; k++) {
             x[k] = a[k] + u01(rng) * (b[k] - a[k]);
         }
@@ -257,7 +283,9 @@ MCResult plain_mc(
     }
 
     return MCResult{
+            // Integral estimate = average f(x) times domain volume.
             mean * volume,
+            // Standard error of the Monte Carlo mean times volume.
             std::sqrt(sigma2 / n) * volume,
             static_cast<std::size_t>(n),
             MCStatus::success,
@@ -271,6 +299,7 @@ MCResult stratified_mc(
         int n,
         const StratifiedOptions& options,
         std::mt19937_64& rng) {
+    // Validate user options before entering recursion.
     if (!valid_box(a, b) || n <= 0 || options.nmin <= 0 || options.max_depth <= 0) {
         return MCResult{
                 std::numeric_limits<double>::quiet_NaN(),
@@ -284,6 +313,7 @@ MCResult stratified_mc(
 }
 
 const char* mc_status_cstr(MCStatus status) {
+    // Small utility used in console logs and diagnostics.
     switch (status) {
         case MCStatus::success:
             return "success";

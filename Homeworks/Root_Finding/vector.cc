@@ -1,81 +1,54 @@
 // "vector.cc" implementation file.
-// Shared dense vector utilities used by the Monte Carlo project.
-//
-// The class deliberately stays lightweight: no bounds checks, no hidden
-// allocations beyond std::vector storage, and straightforward arithmetic
-// operators that map directly to textbook vector formulas.
+// Dense vector operations for numerical methods.
+
 #include "vector.h"
+
 #include <cmath>
-#include <sstream>
-#include <iostream>
 #include <cstdio>
+#include <iostream>
+#include <sstream>
 
 namespace pp {
 
-// ---------------------------------------------------------------
-// Construction and size management
-// ---------------------------------------------------------------
-
-// Construct a zero vector of given size
 vector::vector(int n) : data(n) {}
-
-// Construct from initializer list
 vector::vector(std::initializer_list<NUMBER> list) : data(list) {}
 
-// Size
 int vector::size() const { return static_cast<int>(data.size()); }
-
-// Resize
 void vector::resize(int n) { data.resize(n); }
 
-// ---------------------------------------------------------------
-// Element access
-// ---------------------------------------------------------------
-
-// Element access
 NUMBER& vector::operator[](int i) { return data[i]; }
-NUMBER  vector::operator[](int i) const { return data[i]; }
+NUMBER vector::operator[](int i) const { return data[i]; }
 
-// ---------------------------------------------------------------
-// Arithmetic operators
-// ---------------------------------------------------------------
-
-// Unary negation
 pp::vector vector::operator-() const {
     pp::vector result(size());
     for (int i = 0; i < size(); i++) result[i] = -data[i];
     return result;
 }
 
-// Vector addition
 pp::vector vector::operator+(const pp::vector& other) const {
     pp::vector result(size());
     for (int i = 0; i < size(); i++) result[i] = data[i] + other[i];
     return result;
 }
 
-// Vector subtraction
 pp::vector vector::operator-(const pp::vector& other) const {
     pp::vector result(size());
     for (int i = 0; i < size(); i++) result[i] = data[i] - other[i];
     return result;
 }
 
-// Scalar multiplication
 pp::vector vector::operator*(NUMBER s) const {
     pp::vector result(size());
     for (int i = 0; i < size(); i++) result[i] = data[i] * s;
     return result;
 }
 
-// Scalar division
 pp::vector vector::operator/(NUMBER s) const {
     pp::vector result(size());
     for (int i = 0; i < size(); i++) result[i] = data[i] / s;
     return result;
 }
 
-// Compound assignment operators
 pp::vector& vector::operator+=(const pp::vector& other) {
     for (int i = 0; i < size(); i++) data[i] += other[i];
     return *this;
@@ -96,30 +69,26 @@ pp::vector& vector::operator/=(NUMBER s) {
     return *this;
 }
 
-// Dot product: u*v = sum_i( u_i v_i )
 NUMBER vector::dot(const pp::vector& other) const {
     NUMBER sum = 0.0;
     for (int i = 0; i < size(); i++) sum += data[i] * other[i];
     return sum;
 }
 
-// Euclidean norm: ||v|| = sqrt(v*v)
-NUMBER vector::norm() const {
-    return std::sqrt(dot(*this));
+NUMBER vector::norm() const { return std::sqrt(dot(*this)); }
+
+pp::vector vector::map(std::function<NUMBER(NUMBER)> f) const {
+    pp::vector result(size());
+    for (int i = 0; i < size(); i++) result[i] = f(data[i]);
+    return result;
 }
 
-// ---------------------------------------------------------------
-// Formatting helpers
-// ---------------------------------------------------------------
-
-// Print to stdout
 void vector::print(std::string s) const {
     std::cout << s;
-    for (int i = 0; i < size(); i++) printf("%9.3g ", (double)data[i]);
-    printf("\n");
+    for (int i = 0; i < size(); i++) std::printf("%12.6g ", static_cast<double>(data[i]));
+    std::printf("\n");
 }
 
-// String representation
 std::string vector::to_string() const {
     std::ostringstream oss;
     oss << "{ ";
@@ -131,32 +100,17 @@ std::string vector::to_string() const {
     return oss.str();
 }
 
-// Free functions
-pp::vector operator*(NUMBER s, const pp::vector& v) {
-    return v * s;
-}
+pp::vector operator*(NUMBER s, const pp::vector& v) { return v * s; }
+NUMBER dot(const pp::vector& a, const pp::vector& b) { return a.dot(b); }
 
-NUMBER dot(const pp::vector& a, const pp::vector& b) {
-    return a.dot(b);
-}
-
-// Approximate equality: |a_i - b_i| <= acc + eps*max(|a_i|,|b_i|)  for all i
-// Combines absolute tolerance (acc) and relative tolerance (eps).
 bool approx(const pp::vector& a, const pp::vector& b, NUMBER acc, NUMBER eps) {
     if (a.size() != b.size()) return false;
     for (int i = 0; i < a.size(); i++) {
-        NUMBER diff = std::abs(a[i] - b[i]);
-        NUMBER scale = std::max(std::abs(a[i]), std::abs(b[i]));
+        const NUMBER diff = std::abs(a[i] - b[i]);
+        const NUMBER scale = std::max(std::abs(a[i]), std::abs(b[i]));
         if (diff > acc + eps * scale) return false;
     }
     return true;
-}
-
-// Map: apply function element-wise
-pp::vector vector::map(std::function<NUMBER(NUMBER)> f) const {
-    pp::vector result(size());
-    for (int i = 0; i < size(); i++) result[i] = f(data[i]);
-    return result;
 }
 
 } // namespace pp

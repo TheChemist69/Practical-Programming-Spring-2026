@@ -1,5 +1,9 @@
 // "main.cc" implementation file.
 // Orchestration for Monte Carlo integration homework tasks.
+//
+// This file does not implement integration algorithms directly.
+// Instead, it coordinates experiments, computes diagnostic metrics,
+// prints readable summaries, and writes machine-readable .data files.
 
 #include "mc.h"
 #include "problems.h"
@@ -16,6 +20,11 @@ namespace pp {
 
 namespace {
 
+// Fit y = c * N^p on log-log scale by linear regression.
+// Input vectors are interpreted as:
+// - ns[i]    -> N
+// - errors[i]-> observed error at N
+// Returned value is slope p.
 double fit_loglog_slope(const std::vector<int>& ns, const std::vector<double>& errors) {
     double sx = 0.0;
     double sy = 0.0;
@@ -25,6 +34,7 @@ double fit_loglog_slope(const std::vector<int>& ns, const std::vector<double>& e
 
     for (std::size_t i = 0; i < ns.size() && i < errors.size(); i++) {
         if (ns[i] <= 0 || errors[i] <= 0.0) {
+            // Log transform requires strictly positive values.
             continue;
         }
         const double x = std::log(static_cast<double>(ns[i]));
@@ -37,11 +47,13 @@ double fit_loglog_slope(const std::vector<int>& ns, const std::vector<double>& e
     }
 
     if (m < 2) {
+        // Not enough valid points to fit a line.
         return std::numeric_limits<double>::quiet_NaN();
     }
 
     const double denom = m * sxx - sx * sx;
     if (std::abs(denom) < 1e-16) {
+        // Degenerate x distribution (all points nearly identical).
         return std::numeric_limits<double>::quiet_NaN();
     }
 
@@ -49,12 +61,15 @@ double fit_loglog_slope(const std::vector<int>& ns, const std::vector<double>& e
 }
 
 void run_two_dimensional_examples() {
+    // Small sanity check on two standard 2D problems.
+    // This gives a quick confidence signal before larger scaling sweeps.
     std::puts("=== Two-dimensional test integrals ===");
 
     const MCProblem circle = unit_circle_area_problem();
     const MCProblem smooth = smooth_gaussian_2d_problem();
 
     const int n = 150000;
+    // Fixed seed for reproducible homework output.
     std::mt19937_64 rng(2026041401ull);
 
     MCResult circle_res = plain_mc(circle.integrand, circle.a, circle.b, n, rng);
@@ -100,6 +115,7 @@ void run_two_dimensional_examples() {
 }
 
 void run_plain_scaling() {
+    // Study how plain Monte Carlo error decreases with N.
     std::puts("=== Plain Monte Carlo scaling study ===");
 
     const MCProblem problem = smooth_gaussian_2d_problem();
@@ -112,6 +128,8 @@ void run_plain_scaling() {
     actual_errors.reserve(ns.size());
 
     for (int n : ns) {
+        // Per-N deterministic seed keeps runs reproducible while still
+        // varying random streams between sample counts.
         std::mt19937_64 rng(910000ull + static_cast<unsigned long long>(n));
         MCResult res = plain_mc(problem.integrand, problem.a, problem.b, n, rng);
         const double actual = std::abs(res.value - problem.exact);
@@ -122,6 +140,8 @@ void run_plain_scaling() {
                 actual,
                 res.value,
                 problem.exact,
+            // Multiplying by sqrt(N) helps inspect the expected O(N^-1/2)
+            // convergence behavior of plain Monte Carlo.
                 res.estimated_error * std::sqrt(static_cast<double>(n)),
                 actual * std::sqrt(static_cast<double>(n)),
         });
@@ -142,6 +162,7 @@ void run_plain_scaling() {
 }
 
 void run_quasi_scaling() {
+    // Compare pseudo-random MC against quasi-random MC on the same problem.
     std::puts("=== Quasi-random vs pseudo-random scaling ===");
 
     const MCProblem problem = smooth_gaussian_2d_problem();
@@ -156,6 +177,7 @@ void run_quasi_scaling() {
     quasi_actual.reserve(ns.size());
 
     for (int n : ns) {
+        // Separate pseudo-random seed sequence for this study.
         std::mt19937_64 rng(920000ull + static_cast<unsigned long long>(n));
         MCResult plain = plain_mc(problem.integrand, problem.a, problem.b, n, rng);
         MCResult quasi = quasi_mc_two_sequences(problem.integrand, problem.a, problem.b, n);
@@ -188,12 +210,14 @@ void run_quasi_scaling() {
 }
 
 void run_stratified_scaling() {
+    // Compare recursive stratified sampling against plain sampling.
     std::puts("=== Stratified vs plain scaling ===");
 
     const MCProblem problem = smooth_gaussian_2d_problem();
     const std::vector<int> ns{200, 500, 1000, 2000, 5000, 10000, 20000, 50000};
 
     StratifiedOptions strat_opts;
+    // Baseline recursive controls used in this project.
     strat_opts.nmin = 64;
     strat_opts.max_depth = 64;
 
@@ -201,6 +225,7 @@ void run_stratified_scaling() {
     rows.reserve(ns.size());
 
     for (int n : ns) {
+        // Independent seeds avoid accidental cross-correlation.
         std::mt19937_64 plain_rng(930000ull + static_cast<unsigned long long>(n));
         std::mt19937_64 strat_rng(940000ull + static_cast<unsigned long long>(n));
 
@@ -234,12 +259,15 @@ void run_stratified_scaling() {
 }
 
 void run_difficult_integral() {
+    // Hard benchmark with near-singular behavior.
+    // We report convergence trends but avoid over-interpreting asymptotic slope.
     std::puts("=== Difficult singular integral (not used for scaling fits) ===");
 
     const MCProblem hard = difficult_singular_3d_problem();
     const std::vector<int> ns{1000, 3000, 10000, 30000};
 
     StratifiedOptions strat_opts;
+    // Slightly larger pilot and depth budget to better resolve local features.
     strat_opts.nmin = 96;
     strat_opts.max_depth = 72;
 
@@ -285,6 +313,8 @@ void run_difficult_integral() {
 } // namespace
 
 int run() {
+    // Execute all experiment sections in a stable order so output files
+    // and console summaries are consistent across runs.
     run_two_dimensional_examples();
     run_plain_scaling();
     run_quasi_scaling();
@@ -304,5 +334,6 @@ int run() {
 } // namespace pp
 
 int main() {
+    // Thin program entry point; real logic lives in pp::run().
     return pp::run();
 }

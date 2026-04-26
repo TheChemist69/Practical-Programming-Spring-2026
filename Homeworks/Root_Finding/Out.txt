@@ -1,0 +1,69 @@
+=== Part A (6 points): Newton with numerical Jacobian and line-search ===
+Debug systems + extrema from analytic gradients
+
+  1D: x^2-2=0                  x={ 1.41421 }  ||f||=8.882e-16  status=converged  iter=6 f_calls=13 J_calls=6 ls_steps=0 J_alloc=1
+    expected root ~ 1.4142135623731
+  2D: linear+circle system     x={ 1, 2 }  ||f||=3.538e-12  status=converged  iter=5 f_calls=16 J_calls=5 ls_steps=0 J_alloc=1
+    expected root near {1,2}
+  Rosenbrock grad=0            x={ 1, 1 }  ||f||=0.000e+00  status=converged  iter=100 f_calls=844 J_calls=100 ls_steps=543 J_alloc=1
+    Rosenbrock value at root = 0
+  Himmelblau minima from multiple initial guesses:
+    start1  -> x={ 3, 2 }  H(x)=3.155e-30  ||grad||=2.161e-14  status=converged
+    start2  -> x={ -2.80512, 3.13131 }  H(x)=7.889e-31  ||grad||=1.127e-14  status=converged
+    start3  -> x={ -3.77931, -3.28319 }  H(x)=7.889e-31  ||grad||=1.180e-14  status=converged
+    start4  -> x={ 3.58443, -1.84813 }  H(x)=0.000e+00  ||grad||=0.000e+00  status=converged
+
+=== Part B (3 points): Hydrogen bound state via shooting method ===
+  baseline parameters: rmin=1.0e-03 rmax=8.00 acc=1.0e-06 eps=1.0e-06
+  computed E0 = -0.4999751024320722  exact = -0.5000000000000000  |error|=2.490e-05  mismatch=3.076e-09  status=converged
+
+  Convergence vs rmax:
+  parameter        E0                 |E0+1/2|         converged
+  4             -0.483265255466    1.673e-02       yes
+  6             -0.499277273305    7.227e-04       yes
+  8             -0.499975102432    2.490e-05       yes
+  10            -0.499999268241    7.318e-07       yes
+  12            -0.499999985658    1.434e-08       yes
+
+  Convergence vs rmin:
+  parameter        E0                 |E0+1/2|         converged
+  0.1           -0.501825730987    1.826e-03       yes
+  0.05          -0.500214147978    2.141e-04       yes
+  0.01          -0.499977080189    2.292e-05       yes
+  0.005         -0.499975348227    2.465e-05       yes
+  0.001         -0.499975102432    2.490e-05       yes
+  0.0005        -0.499975101165    2.490e-05       yes
+  0.0001        -0.499975101911    2.490e-05       yes
+
+  Convergence vs ODE acc:
+  parameter        E0                 |E0+1/2|         converged
+  0.001         -0.500021768697    2.177e-05       yes
+  0.0003        -0.499982956387    1.704e-05       yes
+  0.0001        -0.499976495765    2.350e-05       yes
+  3e-05         -0.499975296669    2.470e-05       yes
+  1e-05         -0.499975125827    2.487e-05       yes
+
+  Convergence vs ODE eps:
+  parameter        E0                 |E0+1/2|         converged
+  0.001         -0.500008518361    8.518e-06       yes
+  0.0003        -0.499981007315    1.899e-05       yes
+  0.0001        -0.499976239316    2.376e-05       yes
+  3e-05         -0.499975296296    2.470e-05       yes
+  1e-05         -0.499975138195    2.486e-05       yes
+
+=== Part C (1 point): Quadratic interpolation line-search + Jacobian reuse ===
+  Method comparison summary:
+  rosenbrock backtracking iter=100  f_calls=844   J_calls=100  ls_steps=543  ||f||=0.000e+00
+  rosenbrock quadratic    iter=76   f_calls=376   J_calls=76   ls_steps=147  ||f||=9.930e-14
+  himmelblau backtracking iter=5    f_calls=16    J_calls=5    ls_steps=0    ||f||=0.000e+00
+  himmelblau quadratic    iter=5    f_calls=16    J_calls=5    ls_steps=0    ||f||=0.000e+00
+
+  Jacobian allocation policy: exactly one matrix allocation per Newton solve (updated in-place each iteration).
+
+Data files written:
+  hydrogen_wavefunction.data
+  hydrogen_convergence_rmax.data
+  hydrogen_convergence_rmin.data
+  hydrogen_convergence_acc.data
+  hydrogen_convergence_eps.data
+  line_search_comparison.data
