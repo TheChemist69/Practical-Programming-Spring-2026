@@ -16,7 +16,7 @@ main : $(MAIN_OBJS)
 main.o : main.cc vector.h spline.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-vector.o : vector.cc vector.h
+vector.o : ../vector.cc ../vector.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 spline.o : spline.cc spline.h vector.h

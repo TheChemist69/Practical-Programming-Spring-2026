@@ -24,9 +24,9 @@ scipy_compare: compare_scipy.py benchmark_results.data
 		echo "python3 not found, skipping SciPy comparison"; \
 	fi
 
-main: $(MAIN_OBJS)
+		$(CXX) $(CXXFLAGS) -c $< -o $@
 	$(CXX) $^ -o $@ $(LDLIBS)
-
+	matrix.o: ../matrix.cc ../matrix.h ../vector.h
 main.o: main.cc benchmarks.h erf_integral.h reporting.h integrator.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

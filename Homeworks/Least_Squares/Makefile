@@ -16,10 +16,10 @@ main : $(MAIN_OBJS)
 main.o : main.cc vector.h matrix.h lsfit.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-vector.o : vector.cc vector.h
+vector.o : ../vector.cc ../vector.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-matrix.o : matrix.cc matrix.h vector.h
+matrix.o : ../matrix.cc ../matrix.h ../vector.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 qr.o : qr.cc qr.h matrix.h vector.h

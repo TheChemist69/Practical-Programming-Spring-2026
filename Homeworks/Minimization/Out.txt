@@ -1,0 +1,30 @@
+Rosenbrock: iterations=30 converged=1 x=[0.999991, 0.999982] f=0.000000
+Himmelblau: iterations=999 converged=0 x=[0.000000, 0.000000] f=170.000000
+
+============================================
+PART C: Forward vs Central Differences
+============================================
+
+Testing on Rosenbrock from (-1.2, 1.0):
+
+Forward differences (O(h)):
+  Iterations: 30
+  Solution: x=[0.999991, 0.999982]
+  Value: f=0.000000
+  Converged: yes
+
+Central differences (O(h²)):
+  Iterations: 27
+  Solution: x=[1.000000, 1.000000]
+  Value: f=0.000000
+  Converged: yes
+
+Comparison Summary:
+  Forward:  30 iterations (faster, less accurate)
+  Central:  27 iterations (slower, more accurate)
+  Central requires 2x more function evaluations per gradient computation
+  but provides O(h²) truncation error vs O(h) for forward differences
+
+Higgs fit: iterations=150 converged=1
+ m = 125.972187  Gamma = 2.086340  A = 9.876261  D=26.869512
+Wrote fit.out and data.out for plotting.

@@ -57,55 +57,8 @@ public:
 
     // Element access: A[i,j] (C++23 multidimensional subscript)
     NUMBER& operator[](int i, int j);
-    NUMBER  operator[](int i, int j) const;
+    // Thin wrapper around the shared Linear_Equations matrix implementation.
+    #pragma once
 
-    // Element access: A(i,j)
-    NUMBER& operator()(int i, int j);
+    #include "../Linear_Equations/matrix.h"
     NUMBER  operator()(int i, int j) const;
-
-    // get/set element access
-    NUMBER get(int i, int j) const;
-    void set(int i, int j, NUMBER value);
-
-    // Static factory methods
-    static pp::matrix identity(int n);
-    static pp::matrix random(int n, int m);
-
-    // Transpose
-    pp::matrix transpose() const;
-    pp::matrix T() const;
-
-    // Matrix-vector multiplication
-    pp::vector operator*(const pp::vector& v) const;
-
-    // Matrix-matrix multiplication
-    pp::matrix operator*(const pp::matrix& B) const;
-
-    // Matrix addition / subtraction
-    pp::matrix operator+(const pp::matrix& B) const;
-    pp::matrix operator-(const pp::matrix& B) const;
-
-    // Scalar multiplication / division
-    pp::matrix operator*(NUMBER s) const;
-    pp::matrix operator/(NUMBER s) const;
-
-    // Compound assignment operators
-    pp::matrix& operator+=(const pp::matrix& B);
-    pp::matrix& operator-=(const pp::matrix& B);
-    pp::matrix& operator*=(NUMBER s);
-    pp::matrix& operator/=(NUMBER s);
-
-    // Frobenius norm
-    NUMBER norm() const;
-
-    // Print to stdout
-    void print(std::string s = "") const;
-
-    // String representation
-    std::string to_string() const;
-};
-
-// Scalar * matrix (free function)
-pp::matrix operator*(NUMBER s, const pp::matrix& A);
-
-} // namespace pp

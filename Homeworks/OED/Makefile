@@ -35,7 +35,7 @@ problems.o: problems.cc problems.h rkstep.h vector.h
 rkstep.o: rkstep.cc rkstep.h vector.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-vector.o: vector.cc vector.h
+vector.o: ../vector.cc ../vector.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:

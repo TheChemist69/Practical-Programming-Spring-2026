@@ -50,7 +50,7 @@ problems.o: problems.cc problems.h vector.h
 reporting.o: reporting.cc reporting.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-vector.o: vector.cc vector.h
+vector.o: ../vector.cc ../vector.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Remove generated build artifacts and outputs.
