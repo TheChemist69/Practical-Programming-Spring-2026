@@ -1,4 +1,9 @@
-// Gradient-based minimizer implementation.
+// "optimizer.cc" implementation file.
+// Gradient descent with backtracking line search and adaptive step size.
+//
+// Each iteration: computes the gradient, takes a step params -= step * grad,
+// backtracking if cost does not decrease.  On success the step size grows by
+// step_grow; on failure it shrinks by step_shrink.  Converges when ||grad|| < grad_tol.
 #include "optimizer.h"
 
 #include <algorithm>

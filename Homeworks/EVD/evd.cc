@@ -1,5 +1,16 @@
 // "evd.cc" implementation file.
 // Jacobi eigenvalue decomposition for real symmetric matrices.
+//
+// The classical Jacobi algorithm performs cyclic sweeps over all off-diagonal
+// pairs (p,q).  For each pair it computes the rotation angle theta that zeros
+// A[p,q], applies the two-sided similarity transform A <- J^T * A * J, and
+// accumulates J into the eigenvector matrix V.  The process repeats until no
+// diagonal element changes (indicating all off-diagonal elements are negligible).
+//
+// Two variants are provided:
+//   EVD(A)           -- standard: updates all columns/rows of A each rotation
+//   EVD::optimized(A) -- faster: exploits symmetry by updating only the upper
+//                        triangle, giving ~2x speedup for large matrices
 #include "evd.h"
 #include <cmath>
 

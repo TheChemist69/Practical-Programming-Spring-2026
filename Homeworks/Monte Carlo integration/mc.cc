@@ -292,6 +292,62 @@ MCResult plain_mc(
     };
 }
 
+// Plain Monte Carlo driven by the LCG (Part A comparison).
+// The algorithm is identical to plain_mc; only the random number source differs.
+MCResult plain_mc_lcg(
+        const std::function<double(const vector&)>& f,
+        const vector& a,
+        const vector& b,
+        int n,
+        Lcg& rng) {
+    if (!valid_box(a, b) || n <= 0) {
+        return MCResult{
+                std::numeric_limits<double>::quiet_NaN(),
+                std::numeric_limits<double>::infinity(),
+                0,
+                MCStatus::invalid_input,
+        };
+    }
+
+    const int dim = a.size();
+    const double volume = box_volume(a, b);
+    vector x(dim);
+
+    double sum = 0.0;
+    double sum2 = 0.0;
+
+    for (int i = 0; i < n; i++) {
+        // Draw one uniform point using the LCG.
+        for (int k = 0; k < dim; k++) {
+            x[k] = a[k] + rng.uniform() * (b[k] - a[k]);
+        }
+
+        const double fx = f(x);
+        if (!std::isfinite(fx)) {
+            return MCResult{
+                    std::numeric_limits<double>::quiet_NaN(),
+                    std::numeric_limits<double>::infinity(),
+                    static_cast<std::size_t>(i + 1),
+                    MCStatus::non_finite_evaluation,
+            };
+        }
+
+        sum += fx;
+        sum2 += fx * fx;
+    }
+
+    const double mean = sum / n;
+    double sigma2 = sum2 / n - mean * mean;
+    if (sigma2 < 0.0) sigma2 = 0.0;
+
+    return MCResult{
+            mean * volume,
+            std::sqrt(sigma2 / n) * volume,
+            static_cast<std::size_t>(n),
+            MCStatus::success,
+    };
+}
+
 MCResult stratified_mc(
         const std::function<double(const vector&)>& f,
         const vector& a,

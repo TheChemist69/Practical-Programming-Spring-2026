@@ -3,6 +3,7 @@
 #pragma once
 
 #include "vector.h"
+#include <functional>
 
 namespace pp {
 
@@ -98,5 +99,20 @@ public:
     // Evaluate integral from x[0] to z
     NUMBER integral(NUMBER z) const;
 };
+
+// -----------------------------------------------------------------
+// make_qspline -- functional-programming style quadratic spline (Part C).
+//
+// Returns a closure that captures copies of x, y, b, c by value.
+// The closure evaluates the spline at any point z in [x[0], x[n-1]].
+// This is the functional alternative to the qspline OOP class above:
+//
+//   auto S = pp::make_qspline(xs, ys);
+//   double val = S(z);   // same result as qspline(xs,ys).evaluate(z)
+//
+// The move-copy capture ensures the closure owns its data and is safe
+// to return from functions and store in containers.
+// -----------------------------------------------------------------
+std::function<double(double)> make_qspline(const pp::vector& xs, const pp::vector& ys);
 
 } // namespace pp

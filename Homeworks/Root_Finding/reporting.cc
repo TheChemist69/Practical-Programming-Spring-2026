@@ -9,6 +9,7 @@
 
 namespace pp {
 
+// Writes columns: r, f_numeric, f_exact, |f_numeric - f_exact| for plotting.
 void write_wavefunction_data(const std::string& filename, const std::vector<WavefunctionPoint>& rows) {
     std::ofstream out(filename);
     out << std::setprecision(17);
@@ -22,6 +23,8 @@ void write_wavefunction_data(const std::string& filename, const std::vector<Wave
     }
 }
 
+// Writes a parameter-sweep convergence table with a header line naming
+// the varied parameter, then one row per (parameter, energy, error, converged).
 void write_convergence_data(const std::string& filename, const std::string& parameter_name, const std::vector<ConvergenceRow>& rows) {
     std::ofstream out(filename);
     out << std::setprecision(17);
@@ -35,6 +38,8 @@ void write_convergence_data(const std::string& filename, const std::string& para
     }
 }
 
+// Writes one row per (problem, method) pair with all Newton diagnostic counters
+// for comparing backtracking vs quadratic-interpolation line search.
 void write_line_search_data(const std::string& filename, const std::vector<LineSearchRow>& rows) {
     std::ofstream out(filename);
     out << std::setprecision(17);

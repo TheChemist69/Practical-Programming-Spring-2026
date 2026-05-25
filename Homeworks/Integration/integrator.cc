@@ -1,5 +1,6 @@
 // "integrator.cc" implementation file.
-// Recursive open 4-point adaptive quadrature implementation.
+// Recursive open 4-point adaptive quadrature (Part A) and
+// Clenshaw-Curtis / infinite-limit transformations (Part B).
 
 #include "integrator.h"
 
@@ -166,6 +167,66 @@ AdaptiveResult integrate_open4_adaptive(
     out.status = rec.status;
     out.max_depth_reached = rec.max_depth_reached;
     return out;
+}
+
+// Part B -- Clenshaw-Curtis integrator on [a,b].
+// Substitution: x = m + r*cos(theta),  theta in [0, pi]
+// where m = (a+b)/2, r = (b-a)/2.
+// dx = -r*sin(theta) dtheta, limits flip:
+//   integral_a^b f(x) dx = integral_0^pi f(m + r*cos(t)) * r*sin(t) dt
+// This is smooth even when f has integrable endpoint singularities such as
+// 1/sqrt(b-x) or log(x-a), because sin(theta)->0 cancels the divergence.
+AdaptiveResult integrate_clenshaw_curtis(
+        const std::function<double(double)>& f,
+        double a,
+        double b,
+        const AdaptiveOptions& options) {
+    const double m = 0.5 * (a + b);
+    const double r = 0.5 * (b - a);
+    // Transformed integrand in the theta variable.
+    const auto g = [&](double theta) -> double {
+        const double x = m + r * std::cos(theta);
+        return f(x) * std::sin(theta) * r;
+    };
+    return integrate_open4_adaptive(g, 0.0, M_PI, options);
+}
+
+// Part B -- Semi-infinite integrator on [a, +inf).
+// Substitution: t = (x-a)/(1+(x-a)),  x = a + t/(1-t),  t in [0,1)
+// Jacobian: dx/dt = 1/(1-t)^2.
+// The transformed integrand is integrated on (0,1).
+AdaptiveResult integrate_semi_infinite(
+        const std::function<double(double)>& f,
+        double a,
+        const AdaptiveOptions& options) {
+    const auto g = [&](double t) -> double {
+        // Guard against t reaching exactly 1 (open upper end).
+        if (t >= 1.0) return 0.0;
+        const double one_minus_t = 1.0 - t;
+        const double x = a + t / one_minus_t;
+        const double jacobian = 1.0 / (one_minus_t * one_minus_t);
+        return f(x) * jacobian;
+    };
+    return integrate_open4_adaptive(g, 0.0, 1.0, options);
+}
+
+// Part B -- Doubly infinite integrator on (-inf, +inf).
+// Substitution: x = t/(1-t^2),  t in (-1,1)
+// Jacobian: dx/dt = (1+t^2)/(1-t^2)^2.
+// The transformed integrand is integrated on (-1,1).
+AdaptiveResult integrate_doubly_infinite(
+        const std::function<double(double)>& f,
+        const AdaptiveOptions& options) {
+    const auto g = [&](double t) -> double {
+        // Guard against t reaching ±1 (open endpoints).
+        if (std::abs(t) >= 1.0) return 0.0;
+        const double t2 = t * t;
+        const double denom = 1.0 - t2;
+        const double x = t / denom;
+        const double jacobian = (1.0 + t2) / (denom * denom);
+        return f(x) * jacobian;
+    };
+    return integrate_open4_adaptive(g, -1.0, 1.0, options);
 }
 
 // Human-readable labels used in logs and output files.

@@ -5,8 +5,8 @@ Debug systems + extrema from analytic gradients
     expected root ~ 1.4142135623731
   2D: linear+circle system     x={ 1, 2 }  ||f||=3.538e-12  status=converged  iter=5 f_calls=16 J_calls=5 ls_steps=0 J_alloc=1
     expected root near {1,2}
-  Rosenbrock grad=0            x={ 1, 1 }  ||f||=0.000e+00  status=converged  iter=100 f_calls=844 J_calls=100 ls_steps=543 J_alloc=1
-    Rosenbrock value at root = 0
+  Rosenbrock grad=0            x={ 1, 1 }  ||f||=2.286e-13  status=converged  iter=43 f_calls=310 J_calls=43 ls_steps=180 J_alloc=1
+    Rosenbrock value at root = 4.59141698742e-27
   Himmelblau minima from multiple initial guesses:
     start1  -> x={ 3, 2 }  H(x)=3.155e-30  ||grad||=2.161e-14  status=converged
     start2  -> x={ -2.80512, 3.13131 }  H(x)=7.889e-31  ||grad||=1.127e-14  status=converged
@@ -53,7 +53,7 @@ Debug systems + extrema from analytic gradients
 
 === Part C (1 point): Quadratic interpolation line-search + Jacobian reuse ===
   Method comparison summary:
-  rosenbrock backtracking iter=100  f_calls=844   J_calls=100  ls_steps=543  ||f||=0.000e+00
+  rosenbrock backtracking iter=43   f_calls=310   J_calls=43   ls_steps=180  ||f||=2.286e-13
   rosenbrock quadratic    iter=76   f_calls=376   J_calls=76   ls_steps=147  ||f||=9.930e-14
   himmelblau backtracking iter=5    f_calls=16    J_calls=5    ls_steps=0    ||f||=0.000e+00
   himmelblau quadratic    iter=5    f_calls=16    J_calls=5    ls_steps=0    ||f||=0.000e+00

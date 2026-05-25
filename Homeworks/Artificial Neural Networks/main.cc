@@ -119,20 +119,20 @@ void write_interval(std::ostream& out, const char* key, double a, double b) {
 
 }  // namespace
 
-// Runs the three exercises and writes Out.txtx.
+// Runs the three exercises and writes Out.txt.
 int main() {
   const double x_min = -1.0;
   const double x_max = 1.0;
   const int neurons = 8;
   const int samples = 40;
 
-  std::ofstream out("Out.txtx");
+  std::ofstream out("Out.txt");
   if (!out) {
-    std::cerr << "Failed to open Out.txtx for writing.\n";
+    std::cerr << "Failed to open Out.txt for writing.\n";
     return 1;
   }
 
-  std::cout << "Running ANN homework. Writing Out.txtx in this folder." << std::endl;
+  std::cout << "Running ANN homework. Writing Out.txt in this folder." << std::endl;
 
   out << std::scientific << std::setprecision(8);
   const int col_w = 16;
@@ -305,6 +305,20 @@ int main() {
   out << "\n";
 
   // Exercise 3: ODE y'' + y = 0 with y(0)=0 and y'(0)=1.
+  // Exact solution: y(x) = sin(x).
+  //
+  // The cost function is:
+  //   C = integral_{a}^{b} [Fp''(x) + Fp(x)]^2 dx
+  //       + alpha * [Fp(c) - y_c]^2
+  //       + beta  * [Fp'(c) - y'_c]^2
+  //
+  // alpha and beta must be large enough that the boundary conditions at c=0
+  // dominate the landscape.  With alpha=beta=10, the optimizer converges to
+  // roughly 0.93*sin(x) (any scalar multiple of sin(x) satisfies the ODE but
+  // not the boundary condition), producing a nearly-constant Fp'(x) ~0.93
+  // instead of cos(x) — the graph of Fp'(x) would look wrong.
+  // alpha=beta=100 enforces y(0)=0 and y'(0)=1 strongly enough that the
+  // optimizer finds sin(x) rather than a scaled version.
   pp::Ann ode_net(neurons, act);
   pp::OdeOptions ode_opts;
   ode_opts.a = -1.0;
@@ -312,12 +326,12 @@ int main() {
   ode_opts.c = 0.0;
   ode_opts.y_c = 0.0;
   ode_opts.y1_c = 1.0;
-  ode_opts.alpha = 10.0;
-  ode_opts.beta = 10.0;
+  ode_opts.alpha = 100.0;   // raised from 10: strongly enforce y(0)=0
+  ode_opts.beta  = 100.0;   // raised from 10: strongly enforce y'(0)=1
   ode_opts.samples = 80;
   ode_opts.init_log_b = std::log((ode_opts.b - ode_opts.a) / static_cast<double>(neurons));
   ode_opts.seed = 3;
-  ode_opts.minimize.max_iters = 5000;
+  ode_opts.minimize.max_iters = 8000;   // more iterations to escape local minima
   ode_opts.minimize.grad_tol = 1e-6;
   ode_opts.minimize.step_init = 0.03;
   ode_opts.minimize.step_min = 1e-8;
@@ -431,7 +445,7 @@ int main() {
   }
 
   out.flush();
-  std::cout << "Finished. Out.txtx is ready." << std::endl;
+  std::cout << "Finished. Out.txt is ready." << std::endl;
 
   return 0;
 }

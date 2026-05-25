@@ -180,6 +180,28 @@ int main() {
     }
     std::printf("\n  Data files: cubic_interp.txt\n\n");
 
+    // -- Task C (functional style): make_qspline ----------------------
+    std::printf("-- Task C: Functional-style quadratic spline (make_qspline) -----\n\n");
+
+    // make_qspline returns a std::function<double(double)> closure that
+    // captures all spline data by value.  This is the functional programming
+    // alternative to the qspline OOP class: no visible internal state, just
+    // a plain callable.
+    auto S = pp::make_qspline(xsin, ysin);
+
+    std::printf("  Using make_qspline (functional style, captures x,y,b,c by value):\n\n");
+    std::printf("  S(%.1f)  = %+.8f   exact sin(%.1f) = %+.8f\n",
+                (double)z1, S(z1), (double)z1, std::sin(z1));
+    std::printf("  S(%.1f)  = %+.8f   exact sin(%.1f) = %+.8f\n",
+                (double)z2, S(z2), (double)z2, std::sin(z2));
+
+    // Verify the closure gives the same result as the OOP version.
+    double oop_val  = qs.evaluate(z1);
+    double func_val = S(z1);
+    std::printf("\n  Agreement check at z=%.1f: |OOP - closure| = %.2e %s\n\n",
+                (double)z1, std::abs(oop_val - func_val),
+                std::abs(oop_val - func_val) < 1e-14 ? "OK" : "FAIL");
+
     std::printf("All data files written successfully.\n");
     return 0;
 }

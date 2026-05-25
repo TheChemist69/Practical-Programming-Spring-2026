@@ -1,4 +1,11 @@
 // "cholesky.cc" implementation file.
+// Cholesky decomposition A = L * L^T for symmetric positive-definite matrices.
+//
+// The outer-product form proceeds column-by-column:
+//   L[j,j] = sqrt(A[j,j] - sum_{k<j} L[j,k]^2)
+//   L[i,j] = (A[i,j] - sum_{k<j} L[i,k]*L[j,k]) / L[j,j]  for i > j
+// If any diagonal element would be <= 0, A is not positive-definite and the
+// constructor throws std::runtime_error.
 #include "cholesky.h"
 #include <stdexcept>
 #include <cmath>

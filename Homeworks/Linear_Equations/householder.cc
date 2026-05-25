@@ -1,4 +1,11 @@
 // "householder.cc" implementation file.
+// QR-decomposition via Householder reflections.
+//
+// Each Householder reflector H_k = I - 2*v*v^T / (v^T*v) zeros out the
+// sub-diagonal elements of column k by reflecting x onto alpha*e1, where
+// alpha = -sign(x[0]) * ||x||.  Accumulating all reflectors gives the full
+// orthogonal factor Q.  Compared to Gram-Schmidt, Householder reflections
+// maintain orthogonality to near machine precision even for ill-conditioned A.
 #include "householder.h"
 #include <cmath>
 

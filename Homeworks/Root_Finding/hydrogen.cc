@@ -1,5 +1,14 @@
 // "hydrogen.cc" implementation file.
-// Shooting method for hydrogen bound-state energy and wavefunction.
+// Shooting method for the hydrogen radial Schrödinger equation.
+//
+// The l=0 radial equation in atomic units is:
+//   f''(r) = -2(E + 1/r) * f(r)
+// Written as a two-component first-order system y = {f, f'}:
+//   y[0]' = y[1]
+//   y[1]' = -2(E + 1/r) * y[0]
+// Starting from the near-origin asymptotic form f(r) ~ r - r^2, the system is
+// integrated outward.  Energy is quantized by requiring f(rmax) = 0 (mismatch
+// M(E) = f_E(rmax) = 0), found via bisection.
 
 #include "hydrogen.h"
 
@@ -11,6 +20,7 @@ namespace pp {
 
 namespace {
 
+// Right-hand side of the first-order system: y' = {y[1], -2(E+1/r)*y[0]}.
 vector hydrogen_rhs(double energy, double r, const vector& y) {
     vector dydr(2);
     dydr[0] = y[1];
@@ -18,22 +28,26 @@ vector hydrogen_rhs(double energy, double r, const vector& y) {
     return dydr;
 }
 
+// Returns the starting state {f(rmin), f'(rmin)} from the small-r asymptotic form
+// f(r) = r - r^2, which is accurate when rmin << 1 for any E near -0.5.
 vector hydrogen_initial_state(double rmin) {
-    // Asymptotic boundary condition near r=0: f(r)=r-r^2.
-    // Its derivative is f'(r)=1-2r.
     return vector{rmin - rmin * rmin, 1.0 - 2.0 * rmin};
 }
 
 } // namespace
 
+// Exact hydrogen ground-state energy: E0 = -1/2 a.u.
 double hydrogen_exact_energy_ground() {
     return -0.5;
 }
 
+// Exact 1s radial wavefunction (un-normalised): f(r) = r * exp(-r).
 double hydrogen_exact_wavefunction(double r) {
     return r * std::exp(-r);
 }
 
+// Integrates the radial ODE from rmin to rmax and returns M(E) = f_E(rmax).
+// A sign change in M signals a bound-state energy between two scan points.
 double hydrogen_boundary_mismatch(double energy, const ShootingConfig& cfg, ODEStats* ode_stats) {
     if (!(cfg.rmin > 0.0) || !(cfg.rmax > cfg.rmin)) {
         return std::numeric_limits<double>::quiet_NaN();
@@ -54,10 +68,12 @@ double hydrogen_boundary_mismatch(double energy, const ShootingConfig& cfg, ODES
         return std::numeric_limits<double>::quiet_NaN();
     }
 
-    // Shooting mismatch M(E) = F_E(rmax).
-    return sol.y_end[0];
+    return sol.y_end[0];  // M(E) = f_E(rmax)
 }
 
+// Finds the ground-state energy by:
+//   1. Scanning M(E) at scan_points uniformly spaced energies in [e_min, e_max].
+//   2. Bisecting the first sign-change bracket until |M(E)| < root_acc.
 ShootingResult find_ground_state_energy(const ShootingConfig& cfg) {
     ShootingResult out;
 
@@ -129,6 +145,8 @@ ShootingResult find_ground_state_energy(const ShootingConfig& cfg) {
     return out;
 }
 
+// Integrates the wavefunction at the converged energy and returns up to ~2000
+// sampled points (plus the final point) for plotting against the exact solution.
 std::vector<WavefunctionPoint> compute_wavefunction(const ShootingConfig& cfg, double energy) {
     const vector y0 = hydrogen_initial_state(cfg.rmin);
     const ODEFunction f = [energy](double r, const vector& y) {
@@ -142,6 +160,7 @@ std::vector<WavefunctionPoint> compute_wavefunction(const ShootingConfig& cfg, d
         return rows;
     }
 
+    // Downsample dense trajectories so the output file stays manageable.
     const std::size_t target_points = 2000;
     const std::size_t stride = std::max<std::size_t>(1, sol.xs.size() / target_points);
     rows.reserve(sol.xs.size() / stride + 2);
@@ -154,6 +173,7 @@ std::vector<WavefunctionPoint> compute_wavefunction(const ShootingConfig& cfg, d
         });
     }
 
+    // Always include the last point so the trajectory reaches rmax.
     if (rows.back().r != sol.xs.back()) {
         rows.push_back(WavefunctionPoint{
                 sol.xs.back(),

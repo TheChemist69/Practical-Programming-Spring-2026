@@ -315,6 +315,7 @@ void run_difficult_integral() {
 int run() {
     // Execute all experiment sections in a stable order so output files
     // and console summaries are consistent across runs.
+    run_lcg_comparison();          // Part A: LCG vs Mersenne Twister
     run_two_dimensional_examples();
     run_plain_scaling();
     run_quasi_scaling();
@@ -322,6 +323,7 @@ int run() {
     run_difficult_integral();
 
     std::puts("Data files written:");
+    std::puts("  lcg_comparison.data");
     std::puts("  two_dim_examples.data");
     std::puts("  plain_scaling.data");
     std::puts("  quasi_scaling.data");
@@ -329,6 +331,39 @@ int run() {
     std::puts("  difficult_integral.data");
 
     return EXIT_SUCCESS;
+}
+
+// Part A: comparison of the LCG against std::mt19937_64.
+// The spec asks students to compare three generators; here we run both on the
+// same smooth 2D problem and tabulate errors at increasing N.
+void run_lcg_comparison() {
+    std::puts("=== Part A: LCG vs Mersenne Twister comparison ===");
+
+    const MCProblem problem = smooth_gaussian_2d_problem();
+    const std::vector<int> ns{200, 500, 1000, 2000, 5000, 10000, 20000, 50000};
+
+    std::printf("  %-7s  %-12s  %-12s\n", "N", "|err| LCG", "|err| MT64");
+
+    FILE* fp = std::fopen("lcg_comparison.data", "w");
+    if (fp) std::fprintf(fp, "# N err_lcg err_mt64\n");
+
+    for (int n : ns) {
+        // Different seeds but same N so the comparison is fair.
+        Lcg lcg(static_cast<uint32_t>(n) ^ 0xDEADBEEFu);
+        std::mt19937_64 mt(970000ull + static_cast<unsigned long long>(n));
+
+        MCResult lcg_res = plain_mc_lcg(problem.integrand, problem.a, problem.b, n, lcg);
+        MCResult mt_res  = plain_mc(problem.integrand, problem.a, problem.b, n, mt);
+
+        const double lcg_err = std::abs(lcg_res.value - problem.exact);
+        const double mt_err  = std::abs(mt_res.value  - problem.exact);
+
+        std::printf("  %-7d  %-12.3e  %-12.3e\n", n, lcg_err, mt_err);
+        if (fp) std::fprintf(fp, "%d %.6e %.6e\n", n, lcg_err, mt_err);
+    }
+
+    if (fp) std::fclose(fp);
+    std::puts("");
 }
 
 } // namespace pp

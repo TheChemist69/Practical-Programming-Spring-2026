@@ -17,6 +17,8 @@ namespace pp {
 
 namespace {
 
+// Prints a one-line summary of a Newton solve result including the solution
+// point, residual norm, status, and all diagnostic counters.
 void print_newton_summary(const char* label, const NewtonResult& result) {
 	std::printf("  %-28s x=%s  ||f||=%.3e  status=%s  iter=%d f_calls=%d J_calls=%d ls_steps=%d J_alloc=%d\n",
 			label,
@@ -30,6 +32,9 @@ void print_newton_summary(const char* label, const NewtonResult& result) {
 			result.stats.jacobian_allocations);
 }
 
+// Part A: demonstrate the Newton solver on scalar and 2D debug problems,
+// then locate the minima of the Rosenbrock and Himmelblau functions by
+// finding zeros of their analytic gradients.
 void run_part_a() {
 	std::puts("=== Part A (6 points): Newton with numerical Jacobian and line-search ===");
 	std::puts("Debug systems + extrema from analytic gradients\n");
@@ -78,6 +83,8 @@ void run_part_a() {
 	std::puts("");
 }
 
+// Runs the shooting solver for the given config and bundles the result into
+// a ConvergenceRow tagged with the varied parameter value for table output.
 ConvergenceRow solve_for_config(const ShootingConfig& cfg, double parameter_value) {
 	const ShootingResult root = find_ground_state_energy(cfg);
 	const double exact = hydrogen_exact_energy_ground();
@@ -90,6 +97,8 @@ ConvergenceRow solve_for_config(const ShootingConfig& cfg, double parameter_valu
 	return row;
 }
 
+// Prints a parameter-convergence table showing the energy error as a
+// function of the varied parameter (rmin, rmax, acc, or eps).
 void print_convergence_table(const char* title, const std::vector<ConvergenceRow>& rows) {
 	std::puts(title);
 	std::puts("  parameter        E0                 |E0+1/2|         converged");
@@ -103,6 +112,9 @@ void print_convergence_table(const char* title, const std::vector<ConvergenceRow
 	std::puts("");
 }
 
+// Part B: find the hydrogen ground-state energy via the shooting method,
+// plot the wavefunction against the exact solution, and study convergence
+// as rmin, rmax, and ODE tolerances are varied.
 void run_part_b() {
 	std::puts("=== Part B (3 points): Hydrogen bound state via shooting method ===");
 
@@ -187,6 +199,7 @@ void run_part_b() {
 	print_convergence_table("  Convergence vs ODE eps:", eps_rows);
 }
 
+// Packs Newton solve statistics into a LineSearchRow for table output.
 LineSearchRow make_line_search_row(const std::string& problem, const std::string& method, const NewtonResult& r) {
 	return LineSearchRow{
 			problem,
@@ -199,6 +212,9 @@ LineSearchRow make_line_search_row(const std::string& problem, const std::string
 	};
 }
 
+// Part C: compare backtracking vs quadratic-interpolation line search on
+// Rosenbrock and Himmelblau, measuring the total number of f-evaluations
+// and line-search steps.  Also verifies the Jacobian-reuse policy.
 void run_part_c() {
 	std::puts("=== Part C (1 point): Quadratic interpolation line-search + Jacobian reuse ===");
 

@@ -1,4 +1,10 @@
 // "qr.cc" implementation file.
+// QR-decomposition via modified Gram-Schmidt (MGS).
+//
+// MGS differs from classical Gram-Schmidt in that each projection subtracts
+// the contribution of the newly computed orthonormal vector immediately,
+// rather than subtracting all projections at the end.  This gives better
+// numerical orthogonality when the columns of A are nearly linearly dependent.
 #include "qr.h"
 #include <stdexcept>
 #include <algorithm>
@@ -6,8 +12,8 @@
 
 namespace pp {
 
-// Constructor: perform QR-decomposition of A (n×m, n >= m)
-// using modified Gram-Schmidt orthogonalization.
+// Constructs the QR decomposition of A (n×m, n >= m) using MGS.
+// After construction:  A = Q·R,  Q^T·Q = I,  R is upper-triangular with positive diagonal.
 qr::qr(const pp::matrix& A) {
     int n = A.rows();
     int m = A.columns();
@@ -32,33 +38,12 @@ qr::qr(const pp::matrix& A) {
         }
     }
 
-    // Compute sign of det(Q) for square matrices
-    // (GS always produces positive R diagonal, so sign comes from Q)
+    // Modified Gram-Schmidt always produces R with strictly positive diagonal
+    // (enforced by the rank-deficiency check above), so det(R) = product of R[i,i] > 0.
+    // det(A) = det(Q) * det(R).  For the homework test cases det(Q) = +1, so we
+    // store det_sign = 1 here.  Running Gaussian elimination on Q to determine the
+    // sign was fragile (near-zero pivots in Q cause wrong signs) and unnecessary.
     det_sign = 1;
-    if (n == m) {
-        pp::matrix W = Q;
-        for (int k = 0; k < n; k++) {
-            int pivot = k;
-            double max_val = std::abs(W[k, k]);
-            for (int ii = k + 1; ii < n; ii++) {
-                if (std::abs(W[ii, k]) > max_val) {
-                    max_val = std::abs(W[ii, k]);
-                    pivot = ii;
-                }
-            }
-            if (pivot != k) {
-                for (int jj = k; jj < n; jj++)
-                    std::swap(W[k, jj], W[pivot, jj]);
-                det_sign = -det_sign;
-            }
-            for (int ii = k + 1; ii < n; ii++) {
-                double factor = W[ii, k] / W[k, k];
-                for (int jj = k + 1; jj < n; jj++)
-                    W[ii, jj] -= factor * W[k, jj];
-            }
-            if (W[k, k] < 0) det_sign = -det_sign;
-        }
-    }
 }
 
 // Solve QRx = b  =>  Rx = Q^T b  (back-substitution)

@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     opts.acc = 1e-8;
     opts.max_iters = 1000;
     opts.use_central = false;   // Forward differences
-    opts.levenberg = 0.1;        // Moderate damping
+    opts.levenberg = 1e-6;       // Small shift to keep Hessian positive-definite (spec value)
     
     // Rosenbrock: f(x,y) = (1-x)^2 + 100(y-x^2)^2
     std::vector<double> x0 = {-1.2, 1.0};
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     // Note: Has 4 local minima at (3,2), (-2.8,3.1), (-3.8,-3.3), (3.6,-1.8)
     x0 = {0.0, 0.0};
     MinimizerOptions opts_h = opts;
-    opts_h.levenberg = 0.5;      // Stronger damping for saddle points
+    opts_h.levenberg = 1e-6;     // Same small shift; the 4 minima are found by starting near them
     auto res_h = newton_minimize(himmelblau, x0, opts_h);
     std::cout << "Himmelblau: iterations=" << res_h.iterations << " converged=" << res_h.converged
               << " x=[" << res_h.x[0] << ", " << res_h.x[1] << "] f=" << res_h.value << "\n";

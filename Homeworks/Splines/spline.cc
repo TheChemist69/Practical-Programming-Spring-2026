@@ -1,7 +1,9 @@
 // "spline.cc" implementation file.
 // Spline interpolation: linear, quadratic, and cubic splines.
+// Also includes make_qspline, the functional-programming style variant (Part C).
 #include "spline.h"
 #include <cmath>
+#include <functional>
 #include <stdexcept>
 
 namespace pp {
@@ -257,6 +259,63 @@ NUMBER cspline::integral(NUMBER z) const {
          + c[i] * u * u * u / 3.0
          + d[i] * u * u * u * u / 4.0;
     return sum;
+}
+
+// -----------------------------------------------------------------
+// make_qspline -- functional-programming style (Part C).
+//
+// Computes b and c exactly as the qspline constructor does, then
+// move-captures x, y, b, c into a lambda by value.  The returned
+// std::function<double(double)> is the spline evaluator.
+// Returning a closure rather than an object is the functional style:
+// the caller gets a plain callable with no visible internal state.
+// -----------------------------------------------------------------
+std::function<double(double)> make_qspline(const pp::vector& xs, const pp::vector& ys) {
+    int n = xs.size();
+    int m = n - 1;
+    if (n < 2) throw std::runtime_error("make_qspline: need at least 2 data points");
+
+    pp::vector h(m), p(m);
+    for (int i = 0; i < m; i++) {
+        h[i] = xs[i+1] - xs[i];
+        if (!(h[i] > 0)) throw std::runtime_error("make_qspline: x must be strictly increasing");
+        p[i] = (ys[i+1] - ys[i]) / h[i];
+    }
+
+    // Forward recursion (c_f[0] = 0)
+    pp::vector cf(m);
+    cf[0] = 0.0;
+    for (int i = 0; i < m-1; i++)
+        cf[i+1] = (p[i+1] - p[i] - cf[i]*h[i]) / h[i+1];
+
+    // Backward recursion (c_b[m-1] = 0)
+    pp::vector cb(m);
+    cb[m-1] = 0.0;
+    for (int i = m-2; i >= 0; i--)
+        cb[i] = (p[i+1] - p[i] - cb[i+1]*h[i+1]) / h[i];
+
+    // Averaged coefficients
+    pp::vector b(m), c(m);
+    for (int i = 0; i < m; i++) {
+        c[i] = (cf[i] + cb[i]) / 2.0;
+        b[i] = p[i] - c[i]*h[i];
+    }
+
+    // Capture x, y, b, c by value (move-copy) into the closure.
+    // The closure is self-contained: no reference to local variables.
+    pp::vector x_cap = xs;
+    pp::vector y_cap = ys;
+    pp::vector b_cap = std::move(b);
+    pp::vector c_cap = std::move(c);
+
+    return [x_cap = std::move(x_cap),
+            y_cap = std::move(y_cap),
+            b_cap = std::move(b_cap),
+            c_cap = std::move(c_cap)](double z) -> double {
+        int idx = binsearch(x_cap, z);
+        double u = z - x_cap[idx];
+        return y_cap[idx] + u * (b_cap[idx] + c_cap[idx] * u);
+    };
 }
 
 } // namespace pp

@@ -1,8 +1,12 @@
 // "main.cc" implementation file.
 // Orchestration for recursive adaptive integration homework tasks.
+// Part A: plain open 4-point adaptive integrator and erf benchmark.
+// Part B: Clenshaw-Curtis variable transformation and infinite-limit integrals.
+// Part C: error estimate quality study (sweep over acc for erf(1)).
 
 #include "benchmarks.h"
 #include "erf_integral.h"
+#include "integrator.h"
 #include "reporting.h"
 
 #include <cmath>
@@ -104,17 +108,99 @@ void run_erf_sweep_section() {
 
 // Executes sections in assignment order and lists generated outputs.
 int run() {
-    run_benchmark_section();
-    run_erf_section();
-    run_erf_sweep_section();
+    run_benchmark_section();    // Part A: plain integrator benchmarks
+    run_erf_section();          // Part A: erf via integral
+    run_erf_sweep_section();    // Part C: error estimate quality study
+    run_part_b_section();       // Part B: Clenshaw-Curtis + infinite limits
 
     std::puts("Data files written:");
     std::puts("  benchmark_results.data");
     std::puts("  erf_curve.data");
     std::puts("  erf_tabulated.data");
     std::puts("  erf_acc_sweep.data");
+    std::puts("  cc_singular_comparison.data  (Part B: CC vs plain on singular integrand)");
+    std::puts("  infinite_limits.data          (Part B: semi- and doubly-infinite results)");
 
     return EXIT_SUCCESS;
+}
+
+// Part B: demonstrates Clenshaw-Curtis and infinite-limit integration.
+//
+// Three tests are shown:
+// 1. Singular integrand 1/sqrt(1-x^2) on (-1,1): exact = pi.
+//    The plain integrator struggles because 1/sqrt(1-x^2) diverges at both
+//    endpoints; the CC transformation smooths it to a constant pi on [0,pi].
+// 2. Semi-infinite integral of exp(-x) on [0,+inf): exact = 1.
+// 3. Doubly infinite integral of exp(-x^2) on (-inf,+inf): exact = sqrt(pi).
+//
+// For each case the number of function evaluations is compared between
+// the plain integrator (on a truncated domain) and the transformed integrator.
+void run_part_b_section() {
+    std::puts("=== Part B: Clenshaw-Curtis and infinite-limit integrals ===");
+
+    AdaptiveOptions opts;
+    opts.acc = 1e-6;
+    opts.eps = 1e-6;
+    opts.max_depth = 100000;
+
+    // ---- Test 1: integral_{-1}^{1} 1/sqrt(1-x^2) dx = pi ---------------
+    // Plain integrator on (-1+eps, 1-eps) to avoid the endpoint divergences.
+    const double a_sing = -1.0 + 1e-6, b_sing = 1.0 - 1e-6;
+    const auto f_sing = [](double x) { return 1.0 / std::sqrt(1.0 - x*x); };
+
+    AdaptiveResult plain_sing = integrate_open4_adaptive(f_sing, a_sing, b_sing, opts);
+    AdaptiveResult cc_sing    = integrate_clenshaw_curtis(f_sing, -1.0, 1.0, opts);
+
+    const double exact_sing = M_PI;
+    std::printf("  Singular 1/sqrt(1-x^2) on (-1,1)  exact=pi=%.10g\n", exact_sing);
+    std::printf("    plain (truncated):  value=%.10g  |err|=%.3e  evals=%zu\n",
+                plain_sing.value, std::abs(plain_sing.value - exact_sing), plain_sing.evaluations);
+    std::printf("    Clenshaw-Curtis:    value=%.10g  |err|=%.3e  evals=%zu\n",
+                cc_sing.value, std::abs(cc_sing.value - exact_sing), cc_sing.evaluations);
+
+    // Write comparison data for plotting.
+    {
+        FILE* fp = std::fopen("cc_singular_comparison.data", "w");
+        if (fp) {
+            std::fprintf(fp, "# method value abs_err evals\n");
+            std::fprintf(fp, "plain %.15g %.3e %zu\n",
+                         plain_sing.value, std::abs(plain_sing.value - exact_sing), plain_sing.evaluations);
+            std::fprintf(fp, "cc    %.15g %.3e %zu\n",
+                         cc_sing.value, std::abs(cc_sing.value - exact_sing), cc_sing.evaluations);
+            std::fclose(fp);
+        }
+    }
+
+    // ---- Test 2: integral_{0}^{+inf} exp(-x) dx = 1 --------------------
+    const auto f_semi = [](double x) { return std::exp(-x); };
+    AdaptiveResult semi = integrate_semi_infinite(f_semi, 0.0, opts);
+    const double exact_semi = 1.0;
+    std::printf("\n  Semi-infinite integral_{0}^{+inf} exp(-x) dx  exact=1\n");
+    std::printf("    value=%.10g  |err|=%.3e  evals=%zu  status=%s\n",
+                semi.value, std::abs(semi.value - exact_semi),
+                semi.evaluations, integrator_status_cstr(semi.status));
+
+    // ---- Test 3: integral_{-inf}^{+inf} exp(-x^2) dx = sqrt(pi) --------
+    const auto f_gauss = [](double x) { return std::exp(-x*x); };
+    AdaptiveResult doubly = integrate_doubly_infinite(f_gauss, opts);
+    const double exact_doubly = std::sqrt(M_PI);
+    std::printf("\n  Doubly-infinite integral exp(-x^2) dx  exact=sqrt(pi)=%.10g\n", exact_doubly);
+    std::printf("    value=%.10g  |err|=%.3e  evals=%zu  status=%s\n\n",
+                doubly.value, std::abs(doubly.value - exact_doubly),
+                doubly.evaluations, integrator_status_cstr(doubly.status));
+
+    // Write infinite-limit data for plotting.
+    {
+        FILE* fp = std::fopen("infinite_limits.data", "w");
+        if (fp) {
+            std::fprintf(fp, "# test exact value abs_err evals\n");
+            std::fprintf(fp, "semi_infinite    %.15g %.15g %.3e %zu\n",
+                         exact_semi, semi.value, std::abs(semi.value - exact_semi), semi.evaluations);
+            std::fprintf(fp, "doubly_infinite  %.15g %.15g %.3e %zu\n",
+                         exact_doubly, doubly.value, std::abs(doubly.value - exact_doubly), doubly.evaluations);
+            std::fclose(fp);
+        }
+    }
 }
 
 } // namespace pp

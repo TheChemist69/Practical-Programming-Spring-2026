@@ -1,4 +1,11 @@
 // "givens.cc" implementation file.
+// QR-decomposition via Givens rotations.
+//
+// Each Givens rotation G(i-1, i, theta) is a plane rotation in the (i-1, i)
+// coordinate plane chosen so that R[i, j] becomes zero.  Rotations are applied
+// column-by-column, bottom-to-top, zeroing one sub-diagonal element at a time.
+// The rotation parameters are c = a/r, s = b/r with r = hypot(a, b), which
+// avoids overflow and keeps c^2 + s^2 = 1 numerically.
 #include "givens.h"
 #include <cmath>
 

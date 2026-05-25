@@ -1,21 +1,49 @@
 // "mc.h" header file.
-// Public interface for pseudo-random Monte Carlo integration methods.
+// Public interface for Monte Carlo integration methods.
 //
-// This module exposes two estimators:
-// 1) plain_mc: classic uniform random sampling in a hyper-rectangle.
-// 2) stratified_mc: recursive variance-guided splitting of the domain.
+// This module exposes:
+// 1) Lcg: a quick-and-dirty Linear Congruential Generator (spec Part A).
+//    Used to compare PRNG quality against the standard library Mersenne Twister.
+// 2) plain_mc: classic uniform random sampling using std::mt19937_64.
+// 3) plain_mc_lcg: same algorithm but driven by the LCG.
+// 4) stratified_mc: recursive variance-guided splitting of the domain.
 //
-// Both methods return a value estimate, an internal error estimate,
-// the number of function evaluations, and a status code.
+// All estimators return a value, an internal error estimate, evaluation count,
+// and a status code.
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <random>
 
 #include "vector.h"
 
 namespace pp {
+
+// Quick-and-dirty Linear Congruential Generator (homework spec Part A).
+// Parameters from Knuth: multiplier 1664525, increment 1013904223, modulus 2^32.
+// Period = 2^32.  Quality is acceptable for low-dimensional MC but fails
+// spectral tests and is unsuitable for cryptography or high-dimensional work.
+// Used here to demonstrate convergence rate differences vs. std::mt19937_64.
+class Lcg {
+public:
+    explicit Lcg(uint32_t seed = 1) : state_(seed) {}
+
+    // Returns the next integer in [0, 2^32).
+    uint32_t next() {
+        state_ = 1664525u * state_ + 1013904223u;
+        return state_;
+    }
+
+    // Returns a uniform sample in [0, 1).
+    double uniform() {
+        return static_cast<double>(next()) / 4294967296.0; // 2^32
+    }
+
+private:
+    uint32_t state_;
+};
 
 // Execution state of a Monte Carlo call.
 // The status allows the caller to distinguish numerical failure
@@ -47,15 +75,24 @@ struct StratifiedOptions {
     int max_depth = 64;
 };
 
-// Plain Monte Carlo on the axis-aligned box [a,b].
-// The integrand is sampled uniformly, and the returned error is
-// derived from the sample variance.
+// Plain Monte Carlo on [a,b] driven by std::mt19937_64 (high-quality PRNG).
+// The integrand is sampled uniformly; the returned error is derived from
+// the sample variance: sigma/sqrt(N) * volume.
 MCResult plain_mc(
         const std::function<double(const vector&)>& f,
         const vector& a,
         const vector& b,
         int n,
         std::mt19937_64& rng);
+
+// Same plain Monte Carlo algorithm but driven by the LCG (homework Part A).
+// Useful for comparing convergence quality vs. the Mersenne Twister.
+MCResult plain_mc_lcg(
+        const std::function<double(const vector&)>& f,
+        const vector& a,
+        const vector& b,
+        int n,
+        Lcg& rng);
 
 // Recursive stratified Monte Carlo on [a,b].
 // The algorithm spends a pilot budget, estimates directional

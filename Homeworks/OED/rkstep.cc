@@ -1,6 +1,19 @@
 // "rkstep.cc" implementation file.
-// Embedded Runge-Kutta ODE integrator and adaptive-step-size driver.
-
+// Embedded Runge-Kutta ODE integrator (Dormand-Prince RK45) and
+// adaptive-step-size driver.
+//
+// The Dormand-Prince method uses 6 function evaluations per step and
+// produces two solutions of different orders:
+//   yh (5th order) -- used as the accepted solution
+//   y4 (4th order) -- used only for error estimation: err = ||yh - y4||
+// This is the "FSAL" (First Same As Last) trick: k6 is reused as k1
+// of the next step, saving one evaluation.  (Not exploited here for
+// simplicity; the driver always calls F fresh.)
+//
+// Butcher tableau (Dormand-Prince):
+//   c = [0, 1/5, 3/10, 3/5, 1, 7/8]
+//   5th-order weights b:  [37/378, 0, 250/621, 125/594, 0, 512/1771]
+//   4th-order weights b*: [2825/27648, 0, 18575/48384, 13525/55296, 277/14336, 1/4]
 #include "rkstep.h"
 
 #include <algorithm>
@@ -10,10 +23,12 @@
 
 namespace pp {
 
-// Advances the solution of dy/dx = f(x,y) by step h
-// Uses an embedded Runge-Kutta 4(5) rule (Dormand-Prince) to estimate both y(x+h) and the error.
+// Takes one Dormand-Prince RK45 step of size h from (x, y).
+// Returns {yh, error_estimate} where yh is the 5th-order solution and
+// error_estimate = yh - y4 is the difference between the 5th- and 4th-order solutions.
 std::tuple<vector, vector> rkstep45(std::function<vector(double, vector)> F,
 	double x, vector y, double h) {
+	// Stage evaluations following the Dormand-Prince Butcher tableau.
 	vector k1 = F(x, y);
 	vector k2 = F(x + h / 5.0, y + k1 * (h * 1.0 / 5.0));
 	vector k3 = F(x + 3.0 * h / 10.0,
@@ -28,8 +43,10 @@ std::tuple<vector, vector> rkstep45(std::function<vector(double, vector)> F,
 		  + k3 * (h * 575.0 / 13824.0) + k4 * (h * 44275.0 / 110592.0)
 		  + k5 * (h * 253.0 / 4096.0));
 
+	// 5th-order solution (accepted value).
 	vector yh = y + k1 * (h * 37.0 / 378.0) + k3 * (h * 250.0 / 621.0)
 			+ k4 * (h * 125.0 / 594.0) + k6 * (h * 512.0 / 1771.0);
+	// 4th-order solution (used only to form the error estimate).
 	vector y4 = y + k1 * (h * 2825.0 / 27648.0) + k3 * (h * 18575.0 / 48384.0)
 			+ k4 * (h * 13525.0 / 55296.0) + k5 * (h * 277.0 / 14336.0)
 			+ k6 * (h * 1.0 / 4.0);
@@ -37,8 +54,12 @@ std::tuple<vector, vector> rkstep45(std::function<vector(double, vector)> F,
 	return {yh, yh - y4};
 }
 
-// Adaptive step-size driver routines advances solution from initial point a to final point b
-// Automatically scales h up and down to restrict error relative to eps and acc bounds.
+// Adaptive step-size driver: integrates F from x=a to x=b.
+// At each step, tol = (acc + eps*||yh||) * sqrt(|h|/|b-a|) is the local
+// tolerance budget.  If err <= tol the step is accepted; in either case
+// the step size is rescaled by (tol/err)^0.2 * 0.95 (safety factor).
+// The 0.2 exponent is optimal for 5th-order methods: it corresponds to
+// h_new ~ h_old * (tol/err)^{1/(p+1)} with p=4 (the order of the error estimate).
 std::tuple<std::vector<double>, std::vector<vector>> driver(
 	std::function<vector(double, vector)> F,
 	double a, double b,

@@ -12,8 +12,16 @@ namespace pp {
 
 namespace {
 
-bool line_search_condition(double fz_norm, double fx_norm, double alpha) {
-    return fz_norm < (1.0 - alpha * 0.5) * fx_norm;
+// Part A backtracking: accept as soon as ||f(z)|| < ||f(x)||.
+// Part C quadratic interpolation: use the stricter Armijo-style condition
+// ||f(z)|| < (1 - alpha/2) * ||f(x)|| so that the comparison in Part C is
+// meaningful — the two variants differ in both the alpha-update rule and here.
+bool line_search_condition(double fz_norm, double fx_norm, double alpha,
+                           LineSearchType type) {
+    if (type == LineSearchType::quadratic_interpolation) {
+        return fz_norm < (1.0 - alpha * 0.5) * fx_norm;
+    }
+    return fz_norm < fx_norm;
 }
 
 double quadratic_alpha_update(double alpha, double fx_norm, double fz_norm) {
@@ -151,7 +159,7 @@ NewtonResult newton_solve(const VectorFunction& f, const vector& x0, const Newto
             out.stats.f_evaluations++;
 
             const double fz_norm = fz.norm();
-            if (line_search_condition(fz_norm, fx_norm, alpha)) {
+            if (line_search_condition(fz_norm, fx_norm, alpha, options.line_search)) {
                 break;
             }
 
