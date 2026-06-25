@@ -1,0 +1,146 @@
+
+  Adaptive Integration of Complex-Valued Functions
+  Exam project · Practical Programming 2026 · Nikolaos
+  ──────────────────────────────────────────────────────────────
+
+
+──────────────────────────────────────────────────────────────
+  Part A · A complex-valued adaptive contour integrator   [6 pts]
+──────────────────────────────────────────────────────────────
+
+  We generalize the book's open-4-point adaptive rule (Table 7.3) to
+  complex integrands and integrate along segments z(t) = a + t(b-a).
+
+  • Analytic antiderivatives:  ∫ f(z) dz = F(b) − F(a)
+      ∫ e^z dz   over  0 → 1+i
+          computed  ( 0.4686939399,  2.2873552872)
+          exact     ( 0.4686939399,  2.2873552872)
+          error     2.3e-14   (2048 evaluations)
+      ∫ z^3 dz   over  0 → 1+i
+          computed  (-1.0000000000,  0.0000000000)
+          exact     (-1.0000000000,  0.0000000000)
+          error     0.0e+00
+
+  • Path independence for an analytic integrand
+      direct   −1 → 1        ( 2.3504023873,  0.0000000000)
+      detour   −1 → i → 1    ( 2.3504023873,  0.0000000000)
+      difference             8.6e-14
+
+  • Residue theorem on a square contour around the origin
+      ∮ dz/z       ( 0.0000000000,  6.2831853072)
+      2πi exact    ( 0.0000000000,  6.2831853072)   error 5.8e-13
+      ∮ z^2 dz     |value| 0.0e+00   (analytic ⇒ 0)
+
+
+──────────────────────────────────────────────────────────────
+  Part B · Real integrals evaluated by contour methods   [3 pts]
+──────────────────────────────────────────────────────────────
+
+  B1 · Bessel functions Jₙ(x) by contour integration
+
+  • Contour integral vs power-series reference  (x = 2.5)
+          n         contour            reference          error
+          0    -0.048383776468    -0.048383776468    2.1e-17
+          1     0.497094102464     0.497094102464    1.1e-16
+          2     0.446059058440     0.446059058440    5.6e-17
+          3     0.216600391039     0.216600391039    2.8e-17
+
+  • Independence of the polygon shape  (J₀ at x = 2.5)
+           3-gon   -0.048383776468    error 7.6e-17
+           4-gon   -0.048383776468    error 2.8e-17
+           6-gon   -0.048383776468    error 2.1e-17
+           8-gon   -0.048383776468    error 3.5e-17
+          12-gon   -0.048383776468    error 1.4e-17
+          24-gon   -0.048383776468    error 6.9e-18
+
+  • Recurrence  Jₙ₋₁(x) + Jₙ₊₁(x) = (2n/x) Jₙ(x)
+      x = 4,  n = 2:   LHS  0.3641281459    RHS  0.3641281459    diff 2.2e-16
+
+  B2 · Trigonometric integrals via the unit-circle substitution
+
+  • ∫₀^{2π} dθ/(a + b cosθ) = 2π/√(a²−b²),  via a contour on |z| = 1
+           a     b        contour            exact            error
+          2.0   1.0     3.6275987285     3.6275987285    7.3e-12
+          5.0   4.0     2.0943951024     2.0943951024    2.3e-12
+          3.0   2.0     2.8099258924     2.8099258924    9.7e-12
+      · the imaginary part is ~0: a real trig integral becomes a contour integral
+
+  • Adaptivity earning its keep: as b → a the pole nears the contour  (a = 2)
+            b        contour          error      evaluations
+          1.500     4.74964165    3.5e-13    5568
+          1.900     10.06114863    5.1e-12    8544
+          1.950     14.13827154    1.9e-12    11000
+          1.990     31.45527023    7.2e-13    18080
+      · the adaptive rule keeps full accuracy as the pole approaches |z| = 1,
+      · but the evaluation count climbs as it resolves the sharpening peak
+
+  B3 · A real-line integral via a closed rectangular contour
+
+  • ∮ around a rectangle enclosing z = i equals 2πi·Res = π
+      ∮ rectangle (R=H=20)   ( 3.1415926536,  0.0000000000)
+      2πi·Res(z=i) = π         3.1415926536    error 9.0e-12
+
+  • ∫_{-∞}^{∞} dx/(1+x²) = π:  the bottom edge → π as the other edges vanish
+            R      bottom edge ∫_{-R}^{R}     |π − bottom|
+             2       2.2142974357            9.27e-01
+             5       2.7468015339            3.95e-01
+            10       2.9422553486            1.99e-01
+            20       3.0416758622            9.99e-02
+            40       3.0916030664            5.00e-02
+            80       3.1165939556            2.50e-02
+      · the closed loop is π exactly; the real integral is the bottom edge,
+      · which approaches π because the three non-real edges vanish as R grows
+
+
+──────────────────────────────────────────────────────────────
+  Part C · Spectral trapezoid vs a low-order adaptive rule   [1 pt]
+──────────────────────────────────────────────────────────────
+
+  On the circle z = e^{iθ} the Bessel integrand is periodic.  For a periodic
+  integrand the trapezoid converges exponentially, so it should beat the
+  book's open-4 rule here — that rule is low order, so this is a fair test of
+  'right tool for the job', not a claim that adaptivity is bad in general.
+
+  • Periodic trapezoid vs the (low-order) adaptive open-4 rule, both for J₃(5)
+      target   J₃(5) = 0.364831230614
+
+      periodic trapezoid (evaluations = N)
+          N =  4      error 1.15e-01
+          N =  6      error 3.65e-01
+          N =  8      error 2.61e-01
+          N = 10      error 5.34e-02
+          N = 12      error 5.52e-03
+          N = 16      error 1.52e-05
+          N = 20      error 1.15e-08
+          N = 24      error 3.34e-12
+          N = 32      error 2.22e-16
+
+      adaptive open-4 (varying tolerance)
+          evals      72    error 6.19e-05
+          evals     520    error 1.25e-04
+          evals    4096    error 1.84e-09
+          evals   27928    error 2.28e-12
+          evals  169664    error 2.84e-13
+          evals 1093688    error 3.89e-16
+      · the periodic trapezoid reaches machine precision in ~24 evaluations;
+      · the low-order open-4 rule needs far more — spectral accuracy is the
+      · right tool for a smooth periodic integrand
+
+
+──────────────────────────────────────────────────────────────
+  Checks · automated verification of the headline results   [self-test]
+──────────────────────────────────────────────────────────────
+
+      [PASS]  residue  Im(oint dz/z) = 2pi      err 5.8e-13  (tol 1e-09)
+      [PASS]  residue  Re(oint dz/z) = 0        err 0.0e+00  (tol 1e-09)
+      [PASS]  Bessel   J0(2.5) vs series        err 2.1e-17  (tol 1e-12)
+      [PASS]  Bessel   recurrence (n=2, x=4)    err 2.2e-16  (tol 1e-09)
+      [PASS]  trig     a=2,b=1 vs 2pi/sqrt3     err 7.3e-12  (tol 1e-09)
+      [PASS]  rect     oint dz/(1+z^2) = pi     err 9.0e-12  (tol 1e-09)
+      [PASS]  trap     J3(5) at N=32            err 2.2e-16  (tol 1e-12)
+
+      7 checks, 7 passed, 0 failed
+
+──────────────────────────────────────────────────────────────
+  Full console report saved to Out.txt.  Self-test: 7/7 checks passed.
+──────────────────────────────────────────────────────────────
