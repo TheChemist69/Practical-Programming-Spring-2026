@@ -2,7 +2,7 @@
 Adaptive Integration of Complex-Valued Functions
 Exam project — Practical Programming, Spring 2026
 Nikolaos Antonios Iakynthos Nemet
-This project was created using Claude Code
+This project was created using Claude Code 
 ================================================================
 
 ----------------------------------------------------------------
