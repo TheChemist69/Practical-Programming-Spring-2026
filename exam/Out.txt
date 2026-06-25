@@ -8,9 +8,6 @@
   Part A · A complex-valued adaptive contour integrator   [6 pts]
 ──────────────────────────────────────────────────────────────
 
-  We generalize the book's open-4-point adaptive rule (Table 7.3) to
-  complex integrands and integrate along segments z(t) = a + t(b-a).
-
   • Analytic antiderivatives:  ∫ f(z) dz = F(b) − F(a)
       ∫ e^z dz   over  0 → 1+i
           computed  ( 0.4686939399,  2.2873552872)
@@ -30,6 +27,16 @@
       ∮ dz/z       ( 0.0000000000,  6.2831853072)
       2πi exact    ( 0.0000000000,  6.2831853072)   error 5.8e-13
       ∮ z^2 dz     |value| 0.0e+00   (analytic ⇒ 0)
+
+  • Work vs accuracy: cost of the adaptive rule as the tolerance tightens
+          acc        evaluations     achieved error
+        1e-02              4        1.56e-03
+        1e-04             48        1.62e-07
+        1e-06            292        7.56e-11
+        1e-08           2048        2.27e-14
+        1e-10          16384        0.00e+00
+        1e-12          93144        0.00e+00
+        1e-14         524288        0.00e+00
 
 
 ──────────────────────────────────────────────────────────────
@@ -63,16 +70,13 @@
           2.0   1.0     3.6275987285     3.6275987285    7.3e-12
           5.0   4.0     2.0943951024     2.0943951024    2.3e-12
           3.0   2.0     2.8099258924     2.8099258924    9.7e-12
-      · the imaginary part is ~0: a real trig integral becomes a contour integral
 
-  • Adaptivity earning its keep: as b → a the pole nears the contour  (a = 2)
+  • Cost as b → a, the pole approaching the contour  (a = 2)
             b        contour          error      evaluations
           1.500     4.74964165    3.5e-13    5568
           1.900     10.06114863    5.1e-12    8544
           1.950     14.13827154    1.9e-12    11000
           1.990     31.45527023    7.2e-13    18080
-      · the adaptive rule keeps full accuracy as the pole approaches |z| = 1,
-      · but the evaluation count climbs as it resolves the sharpening peak
 
   B3 · A real-line integral via a closed rectangular contour
 
@@ -88,18 +92,11 @@
             20       3.0416758622            9.99e-02
             40       3.0916030664            5.00e-02
             80       3.1165939556            2.50e-02
-      · the closed loop is π exactly; the real integral is the bottom edge,
-      · which approaches π because the three non-real edges vanish as R grows
 
 
 ──────────────────────────────────────────────────────────────
   Part C · Spectral trapezoid vs a low-order adaptive rule   [1 pt]
 ──────────────────────────────────────────────────────────────
-
-  On the circle z = e^{iθ} the Bessel integrand is periodic.  For a periodic
-  integrand the trapezoid converges exponentially, so it should beat the
-  book's open-4 rule here — that rule is low order, so this is a fair test of
-  'right tool for the job', not a claim that adaptivity is bad in general.
 
   • Periodic trapezoid vs the (low-order) adaptive open-4 rule, both for J₃(5)
       target   J₃(5) = 0.364831230614
@@ -122,9 +119,6 @@
           evals   27928    error 2.28e-12
           evals  169664    error 2.84e-13
           evals 1093688    error 3.89e-16
-      · the periodic trapezoid reaches machine precision in ~24 evaluations;
-      · the low-order open-4 rule needs far more — spectral accuracy is the
-      · right tool for a smooth periodic integrand
 
 
 ──────────────────────────────────────────────────────────────

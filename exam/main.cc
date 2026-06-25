@@ -80,9 +80,6 @@ void topic(const char* s) { emit("\n  %s\n", s); }
 // A single demonstration heading.
 void demo(const char* s) { emit("\n  • %s\n", s); }
 
-// A short explanatory aside attached to the preceding results.
-void note(const char* s) { emit("      · %s\n", s); }
-
 // ---- shared integrands (used by both the demos and the self-test) -----------
 
 // Vertices of a regular polygon inscribed in the unit circle.
@@ -112,8 +109,6 @@ cplx one_over_1_plus_z2(cplx z) { return 1.0 / (1.0 + z * z); }
 // =============================================================================
 void run_part_a() {
     part("Part A", "A complex-valued adaptive contour integrator", "6 pts");
-    emit("\n  We generalize the book's open-4-point adaptive rule (Table 7.3) to\n");
-    emit("  complex integrands and integrate along segments z(t) = a + t(b-a).\n");
 
     demo("Analytic antiderivatives:  ∫ f(z) dz = F(b) − F(a)");
     {
@@ -178,6 +173,33 @@ void run_part_a() {
         const auto fsq = [](cplx z) { return z * z; };
         const CResult r0 = integrate_polygon(fsq, square);
         emit("      ∮ z^2 dz     |value| %.1e   (analytic ⇒ 0)\n", std::abs(r0.value));
+    }
+
+    demo("Work vs accuracy: cost of the adaptive rule as the tolerance tightens");
+    {
+        // ∫ e^z dz over 0 → 1+i has the exact value e^(1+i) − 1, so the achieved
+        // error is known exactly.  Sweeping the tolerance shows the work–precision
+        // trade-off: evaluations grow as the requested accuracy tightens.
+        const cplx a(0.0, 0.0), b(1.0, 1.0);
+        const auto fexp = [](cplx z) { return std::exp(z); };
+        const cplx exact = std::exp(b) - std::exp(a);
+
+        emit("          acc        evaluations     achieved error\n");
+        std::ofstream out("work_precision.data");
+        out << "# evaluations error acc\n";
+        const double eps_machine = 2.220446049250313e-16;  // double precision
+        for (double acc : {1e-2, 1e-4, 1e-6, 1e-8, 1e-10, 1e-12, 1e-14}) {
+            COptions opt;
+            opt.acc = acc;
+            opt.eps = acc;
+            const CResult r = integrate_segment(fexp, a, b, opt);
+            const double err = std::abs(r.value - exact);
+            emit("        %.0e        %7zu        %.2e\n", acc, r.evaluations, err);
+            // For the log-scale plot, floor the error at machine epsilon so the
+            // round-off plateau (where the true error is effectively 0) stays
+            // visible: those points sit on the floor while evaluations keep rising.
+            out << r.evaluations << " " << std::max(err, eps_machine) << " " << acc << "\n";
+        }
     }
 }
 
@@ -252,7 +274,6 @@ void run_part_b() {
             emit("         %4.1f  %4.1f    % .10f    % .10f    %.1e\n",
                  a, b, r.value.real(), exact, std::abs(r.value.real() - exact));
         }
-        note("the imaginary part is ~0: a real trig integral becomes a contour integral");
 
         // Figure data: fix a = 2 and sweep b in [0, 1.9].
         std::ofstream out("real_trig.data");
@@ -266,7 +287,7 @@ void run_part_b() {
         }
     }
 
-    demo("Adaptivity earning its keep: as b → a the pole nears the contour  (a = 2)");
+    demo("Cost as b → a, the pole approaching the contour  (a = 2)");
     {
         emit("            b        contour          error      evaluations\n");
         for (const double b : {1.5, 1.9, 1.95, 1.99}) {
@@ -276,8 +297,6 @@ void run_part_b() {
             emit("         %6.3f    % .8f    %.1e    %zu\n",
                  b, r.value.real(), std::abs(r.value.real() - exact), r.evaluations);
         }
-        note("the adaptive rule keeps full accuracy as the pole approaches |z| = 1,");
-        note("but the evaluation count climbs as it resolves the sharpening peak");
     }
 
     // ---- B3: a real-line integral via a rectangular contour ----------------
@@ -311,8 +330,6 @@ void run_part_b() {
             emit("          %4.0f      % .10f            %.2e\n", R, b, err);
             out << R << " " << b << " " << err << "\n";
         }
-        note("the closed loop is π exactly; the real integral is the bottom edge,");
-        note("which approaches π because the three non-real edges vanish as R grows");
     }
 }
 
@@ -321,10 +338,6 @@ void run_part_b() {
 // =============================================================================
 void run_part_c() {
     part("Part C", "Spectral trapezoid vs a low-order adaptive rule", "1 pt");
-    emit("\n  On the circle z = e^{iθ} the Bessel integrand is periodic.  For a periodic\n");
-    emit("  integrand the trapezoid converges exponentially, so it should beat the\n");
-    emit("  book's open-4 rule here — that rule is low order, so this is a fair test of\n");
-    emit("  'right tool for the job', not a claim that adaptivity is bad in general.\n");
 
     const int n = 3;
     const double x = 5.0;
@@ -366,9 +379,6 @@ void run_part_c() {
             out << r.evaluations << " " << err << "\n";
         }
     }
-    note("the periodic trapezoid reaches machine precision in ~24 evaluations;");
-    note("the low-order open-4 rule needs far more — spectral accuracy is the");
-    note("right tool for a smooth periodic integrand");
 }
 
 // =============================================================================

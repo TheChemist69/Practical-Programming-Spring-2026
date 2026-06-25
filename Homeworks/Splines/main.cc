@@ -1,3 +1,6 @@
+// Nikolaos Antonios Iakynthos Nemet
+// This project was created using a combination of Claude Code and GitHub Copilot.
+
 // "main.cc" -- Spline Interpolation.
 // Linear, quadratic, and cubic spline interpolation with derivatives
 // and integration.  Produces data files for gnuplot visualization.

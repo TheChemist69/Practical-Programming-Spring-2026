@@ -42,9 +42,18 @@ How it is done
     - it satisfies the residue theorem,  ∮ dz/z = 2πi   (and ∮ z² dz = 0).
 
 Figures
-  Part A has no plot: its correctness is shown numerically in the console
-  report and re-checked by the built-in self-test (the residue theorem holds
-  to ~1e-13).
+  plot_work_precision.svg
+    For ∫ e^z dz (0 → 1+i), whose exact value is known, the achieved error
+    |computed - exact| is plotted against the number of function evaluations as
+    the tolerance is tightened from 1e-2 to 1e-14 (log-log).  Two regimes are
+    visible.  First a convergence regime, where the error falls steadily as more
+    evaluations are spent — the adaptive rule's work-precision trade-off.  Then a
+    round-off plateau: once the error reaches the machine-precision floor (~1e-16)
+    it stops improving, while the evaluation count keeps climbing (16k, 93k, 524k)
+    — asking for more accuracy than double precision can deliver only wastes work.
+    (On the plot the plateau error is floored at machine epsilon so those points
+    stay on the log axis; the dashed line marks machine precision.)  The rest of
+    Part A is verified numerically in the console report and the self-test.
 
 
 ================================================================

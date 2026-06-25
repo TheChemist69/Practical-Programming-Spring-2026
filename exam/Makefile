@@ -4,7 +4,8 @@ LDLIBS = -lm
 
 OBJS = main.o cintegrator.o bessel.o
 
-PLOTS = plot_bessel.svg plot_bessel_convergence.svg \
+PLOTS = plot_work_precision.svg \
+        plot_bessel.svg plot_bessel_convergence.svg \
         plot_real_trig.svg plot_real_rectangle.svg \
         plot_spectral.svg
 
@@ -18,7 +19,8 @@ main: $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
 # All data files are produced together by the single run.
-DATA = bessel_contour.data bessel_polygon_convergence.data \
+DATA = work_precision.data \
+       bessel_contour.data bessel_polygon_convergence.data \
        real_trig.data real_rectangle.data \
        spectral_trapezoid.data spectral_adaptive.data
 $(DATA): Out.txt

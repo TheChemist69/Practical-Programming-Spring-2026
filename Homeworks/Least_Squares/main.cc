@@ -1,3 +1,6 @@
+// Nikolaos Antonios Iakynthos Nemet
+// This project was created using a combination of Claude Code and GitHub Copilot.
+
 // "main.cc" -- Ordinary Least-Squares Fit: ThX radioactive decay.
 //
 // Fits ln(activity) = ln(a) - lambda*t  to the 1902 Rutherford & Soddy

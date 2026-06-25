@@ -1,3 +1,6 @@
+// Nikolaos Antonios Iakynthos Nemet
+// This project was created using a combination of Claude Code and GitHub Copilot.
+
 // "main.cc" — Jacobi eigenvalue decomposition: tests and hydrogen atom.
 #include <iostream>
 #include <cstdio>

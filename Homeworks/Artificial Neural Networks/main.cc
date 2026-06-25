@@ -1,3 +1,6 @@
+// Nikolaos Antonios Iakynthos Nemet
+// This project was created using a combination of Claude Code and GitHub Copilot.
+
 // Main driver for the ANN homework.
 #include "activation.h"
 #include "ann.h"

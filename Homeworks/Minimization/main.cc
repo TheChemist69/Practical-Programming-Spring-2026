@@ -1,3 +1,6 @@
+// Nikolaos Antonios Iakynthos Nemet
+// This project was created using a combination of Claude Code and GitHub Copilot.
+
 // main.cc
 // Runs minimization tests: Rosenbrock, Himmelblau, and Higgs fit
 // Part C: Compares forward and central difference schemes

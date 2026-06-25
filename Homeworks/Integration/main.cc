@@ -1,3 +1,6 @@
+// Nikolaos Antonios Iakynthos Nemet
+// This project was created using a combination of Claude Code and GitHub Copilot.
+
 // "main.cc" implementation file.
 // Orchestration for recursive adaptive integration homework tasks.
 // Part A: plain open 4-point adaptive integrator and erf benchmark.
