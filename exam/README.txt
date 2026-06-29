@@ -44,22 +44,36 @@ How it is done
       knowing the exact value) is a reliable, conservative bound on the true
       error — this is what lets the adaptive rule decide when to stop.
 
+The two errors (estimated vs true)
+  The work-precision study reports two different errors; they are not the same
+  thing, and the difference is the whole point.
+
+    * TRUE error = |computed - exact|.  It uses the known closed-form value
+      e^(1+i) - 1, so it is the genuine accuracy.  It can only be formed when the
+      answer is already known — which, in real problems, it is not.
+
+    * ESTIMATED error = the integrator's own |Q - q|, summed over all the
+      sub-intervals it created.  On each interval the open-4 rule builds two
+      quadratures of different order — the higher-order Q (the value it returns)
+      and a lower-order q — and their difference measures how much the result
+      would still change under further refinement.  This uses no exact value, so
+      it is what the integrator itself relies on to decide when to stop.
+
+  Why they differ: |Q - q| measures the gap between the two rules, which
+  OVER-estimates the true error of the better rule Q (Q is far more accurate than
+  that gap suggests).  So the estimate sits ABOVE the true error at every point —
+  it is deliberately conservative: a safe upper bound that never under-reports.
+
+
 Figures
   plot_work_precision.svg
-    For ∫ e^z dz (0 → 1+i), whose exact value is known, two quantities are plotted
-    against the number of function evaluations as the tolerance is tightened from
-    1e-2 to 1e-14 (log-log): the integrator's own error ESTIMATE (the embedded
-    |Q - q|, which it computes without using the exact value) and the TRUE error
-    |computed - exact|.  The estimate lies above the true error at every point, so
-    it is a safe upper bound — exactly why the adaptive rule can stop on its own.
-    Two regimes are also visible: first the error falls steadily as more
-    evaluations are spent (the work-precision trade-off), then it reaches the
-    machine-precision floor (~1e-16) and stops improving while the evaluation count
-    keeps climbing (16k, 93k, 524k) — asking for more accuracy than double
-    precision can deliver only wastes work.  (On the plot the errors are floored at
-    machine epsilon so the plateau points stay on the log axis; the dashed line
-    marks machine precision.)  The rest of Part A is verified numerically in the
-    console report and the self-test.
+    Estimated error (self-reported) and true error vs the number of function
+    evaluations for ∫ e^z dz (0 → 1+i), as the tolerance is tightened from 1e-2 to
+    1e-18 (log-log).  The estimate (upper curve) stays above the true error (lower
+    curve) throughout, and both descend toward the machine-precision floor (dashed
+    line) while the evaluation count explodes to ~23 million.  (Errors are floored
+    at machine epsilon so the plateau points stay on the log axis.)  The rest of
+    Part A is verified numerically in the console report and the self-test.
 
 
 ================================================================

@@ -175,6 +175,7 @@ void run_part_a() {
         emit("      ∮ z^2 dz     |value| %.1e   (analytic ⇒ 0)\n", std::abs(r0.value));
     }
 
+    emit("\n  Warning: this calculation is long - takes approx 25 s on my machine\n");
     demo("Error estimate vs true error, and cost, as the tolerance tightens");
     {
         // ∫ e^z dz over 0 → 1+i has the exact value e^(1+i) − 1, so the true error is
@@ -189,7 +190,7 @@ void run_part_a() {
         std::ofstream out("work_precision.data");
         out << "# evaluations true_error acc estimated_error\n";
         const double eps_machine = 2.220446049250313e-16;  // double precision
-        for (double acc : {1e-2, 1e-4, 1e-6, 1e-8, 1e-10, 1e-12, 1e-14}) {
+        for (double acc : {1e-2, 1e-4, 1e-6, 1e-8, 1e-10, 1e-12, 1e-14, 1e-16, 1e-18}) {
             COptions opt;
             opt.acc = acc;
             opt.eps = acc;
@@ -249,6 +250,8 @@ void run_part_b() {
     }
 
     // Data file: J_0,1,2 over a range of x for plotting.
+    emit("\n  Warning: this calculation is long - takes approx 25 s on my machine\n");
+    demo("Sampling Jₙ(x) over x in [0,12] for the plot (n = 0,1,2)");
     {
         std::ofstream out("bessel_contour.data");
         out << "# x J0_contour J0_ref J1_contour J1_ref J2_contour J2_ref\n";
@@ -362,7 +365,8 @@ void run_part_c() {
     }
 
     // Adaptive open-4 on the same periodic integrand over [0, 2 pi].
-    emit("\n      adaptive open-4 (varying tolerance)\n");
+    emit("\n      Warning: this calculation is long - takes approx 2 s on my machine\n");
+    emit("      adaptive open-4 (varying tolerance)\n");
     {
         // A real integrand expressed as a complex one with zero imaginary part.
         const std::function<cplx(double)> g = [n, x](double th) -> cplx {
