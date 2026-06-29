@@ -36,24 +36,30 @@ How it is done
   adaptive_unit() implements the open-4-point recursive rule on a real
   parameter t; integrate_segment() applies it to z(t) = a + t(b - a); and
   integrate_polygon() sums the segment integrals around a closed loop.  The
-  engine is verified three ways:
+  engine is verified four ways:
     - it reproduces analytic antiderivatives,  ∫ f(z) dz = F(b) - F(a);
     - the result is path-independent for an analytic integrand;
-    - it satisfies the residue theorem,  ∮ dz/z = 2πi   (and ∮ z² dz = 0).
+    - it satisfies the residue theorem,  ∮ dz/z = 2πi   (and ∮ z² dz = 0);
+    - its self-reported error estimate (the embedded |Q - q|, computed without
+      knowing the exact value) is a reliable, conservative bound on the true
+      error — this is what lets the adaptive rule decide when to stop.
 
 Figures
   plot_work_precision.svg
-    For ∫ e^z dz (0 → 1+i), whose exact value is known, the achieved error
-    |computed - exact| is plotted against the number of function evaluations as
-    the tolerance is tightened from 1e-2 to 1e-14 (log-log).  Two regimes are
-    visible.  First a convergence regime, where the error falls steadily as more
-    evaluations are spent — the adaptive rule's work-precision trade-off.  Then a
-    round-off plateau: once the error reaches the machine-precision floor (~1e-16)
-    it stops improving, while the evaluation count keeps climbing (16k, 93k, 524k)
-    — asking for more accuracy than double precision can deliver only wastes work.
-    (On the plot the plateau error is floored at machine epsilon so those points
-    stay on the log axis; the dashed line marks machine precision.)  The rest of
-    Part A is verified numerically in the console report and the self-test.
+    For ∫ e^z dz (0 → 1+i), whose exact value is known, two quantities are plotted
+    against the number of function evaluations as the tolerance is tightened from
+    1e-2 to 1e-14 (log-log): the integrator's own error ESTIMATE (the embedded
+    |Q - q|, which it computes without using the exact value) and the TRUE error
+    |computed - exact|.  The estimate lies above the true error at every point, so
+    it is a safe upper bound — exactly why the adaptive rule can stop on its own.
+    Two regimes are also visible: first the error falls steadily as more
+    evaluations are spent (the work-precision trade-off), then it reaches the
+    machine-precision floor (~1e-16) and stops improving while the evaluation count
+    keeps climbing (16k, 93k, 524k) — asking for more accuracy than double
+    precision can deliver only wastes work.  (On the plot the errors are floored at
+    machine epsilon so the plateau points stay on the log axis; the dashed line
+    marks machine precision.)  The rest of Part A is verified numerically in the
+    console report and the self-test.
 
 
 ================================================================

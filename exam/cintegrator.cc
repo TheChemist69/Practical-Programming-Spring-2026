@@ -22,6 +22,7 @@ namespace {
 // Node returned while descending the recursion tree.
 struct Rec {
     cplx value{};
+    double error = 0.0;
     std::size_t evaluations = 0;
     int depth = 0;
 };
@@ -57,6 +58,7 @@ Rec integrate_rec(const std::function<cplx(double)>& g,
     const double tol = acc + eps * std::abs(Q);
 
     out.value = Q;
+    out.error = err;  // this leaf's error estimate
 
     // Stop on a non-finite value (also prevents infinite recursion on NaN),
     // on meeting the local tolerance, or on hitting the recursion guard.
@@ -73,6 +75,7 @@ Rec integrate_rec(const std::function<cplx(double)>& g,
     const Rec right = integrate_rec(g, mid, b, child_acc, eps, *f3, f4, depth + 1, opt);
 
     out.value = left.value + right.value;
+    out.error = left.error + right.error;  // conservative sum of the sub-interval estimates
     out.evaluations += left.evaluations + right.evaluations;
     out.depth = std::max(left.depth, right.depth);
     return out;
@@ -86,6 +89,7 @@ CResult adaptive_unit(const std::function<cplx(double)>& g,
     if (a == b) return r;
     const Rec rec = integrate_rec(g, a, b, opt.acc, opt.eps, std::nullopt, std::nullopt, 0, opt);
     r.value = rec.value;
+    r.error = rec.error;
     r.evaluations = rec.evaluations;
     return r;
 }
@@ -114,6 +118,7 @@ CResult integrate_polygon(const std::function<cplx(cplx)>& f,
         const cplx b = vertices[(i + 1) % n];
         const CResult seg = integrate_segment(f, a, b, opt);
         total.value += seg.value;
+        total.error += seg.error;  // sum the per-edge error estimates
         total.evaluations += seg.evaluations;
     }
     return total;

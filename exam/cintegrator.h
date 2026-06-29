@@ -17,6 +17,8 @@ using cplx = std::complex<double>;
 // Result returned by every integrator entry point.
 struct CResult {
     cplx value{};                 // estimated integral
+    double error = 0.0;           // the integrator's own error estimate (accumulated |Q - q|);
+                                  // computed without knowing the exact answer
     std::size_t evaluations = 0;  // total integrand calls
 };
 

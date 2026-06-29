@@ -175,30 +175,32 @@ void run_part_a() {
         emit("      ∮ z^2 dz     |value| %.1e   (analytic ⇒ 0)\n", std::abs(r0.value));
     }
 
-    demo("Work vs accuracy: cost of the adaptive rule as the tolerance tightens");
+    demo("Error estimate vs true error, and cost, as the tolerance tightens");
     {
-        // ∫ e^z dz over 0 → 1+i has the exact value e^(1+i) − 1, so the achieved
-        // error is known exactly.  Sweeping the tolerance shows the work–precision
-        // trade-off: evaluations grow as the requested accuracy tightens.
+        // ∫ e^z dz over 0 → 1+i has the exact value e^(1+i) − 1, so the true error is
+        // known.  Beside it the integrator's OWN error estimate (the accumulated
+        // embedded |Q−q|, computed without knowing the exact value) is reported, and
+        // the evaluation count gives the work-precision trade-off.
         const cplx a(0.0, 0.0), b(1.0, 1.0);
         const auto fexp = [](cplx z) { return std::exp(z); };
         const cplx exact = std::exp(b) - std::exp(a);
 
-        emit("          acc        evaluations     achieved error\n");
+        emit("          acc        evaluations    estimated error    true error\n");
         std::ofstream out("work_precision.data");
-        out << "# evaluations error acc\n";
+        out << "# evaluations true_error acc estimated_error\n";
         const double eps_machine = 2.220446049250313e-16;  // double precision
         for (double acc : {1e-2, 1e-4, 1e-6, 1e-8, 1e-10, 1e-12, 1e-14}) {
             COptions opt;
             opt.acc = acc;
             opt.eps = acc;
             const CResult r = integrate_segment(fexp, a, b, opt);
-            const double err = std::abs(r.value - exact);
-            emit("        %.0e        %7zu        %.2e\n", acc, r.evaluations, err);
-            // For the log-scale plot, floor the error at machine epsilon so the
-            // round-off plateau (where the true error is effectively 0) stays
-            // visible: those points sit on the floor while evaluations keep rising.
-            out << r.evaluations << " " << std::max(err, eps_machine) << " " << acc << "\n";
+            const double true_err = std::abs(r.value - exact);
+            emit("        %.0e        %7zu       %.2e          %.2e\n",
+                 acc, r.evaluations, r.error, true_err);
+            // For the log-scale plot the errors are floored at machine epsilon so the
+            // round-off plateau (where the true error is effectively 0) stays visible.
+            out << r.evaluations << " " << std::max(true_err, eps_machine)
+                << " " << acc << " " << std::max(r.error, eps_machine) << "\n";
         }
     }
 }
@@ -433,6 +435,23 @@ void run_checks() {
 
     // Part C: spectral trapezoid.
     check("trap     J3(5) at N=32", bessel_trapezoid(3, 5.0, 32), bessel_reference(3, 5.0), 1e-12);
+
+    // Error estimate must bound the true error (the basis of the adaptive rule).
+    {
+        const cplx a(0.0, 0.0), b(1.0, 1.0);
+        const auto fexp = [](cplx z) { return std::exp(z); };
+        const cplx exact = std::exp(b) - std::exp(a);
+        COptions opt;
+        opt.acc = 1e-6;
+        opt.eps = 1e-6;
+        const CResult r = integrate_segment(fexp, a, b, opt);
+        const double true_err = std::abs(r.value - exact);
+        ++g_checks;
+        const bool ok = (r.error >= true_err);
+        if (!ok) ++g_failures;
+        emit("      [%s]  %-32s  est %.1e >= true %.1e\n",
+             ok ? "PASS" : "FAIL", "estimate bounds true error", r.error, true_err);
+    }
 
     emit("\n      %d checks, %d passed, %d failed\n", g_checks, g_checks - g_failures, g_failures);
 }
